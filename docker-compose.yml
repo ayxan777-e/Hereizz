@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  hereizzz-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: hereizzz-db
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Pass123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - hereizzz_sql_data:/var/opt/mssql
+
+volumes:
+  hereizzz_sql_data:
