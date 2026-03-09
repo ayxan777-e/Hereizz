@@ -16,6 +16,7 @@ public static class ProductSeeder
         {
             new Product
             {
+                Id=1,
                 Title = "Apple Watch Series 9",
                 Description = "Latest Apple smartwatch",
                 Price = 399,

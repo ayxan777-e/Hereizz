@@ -16,9 +16,13 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<HereizzzDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        //Product's Scopes
+        //Scopes
+        services.AddScoped<IShippingOptionRepository, ShippingOptionRepository>();
+        services.AddScoped<IRouteSelectionService, RouteSelectionService>();
+        services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
 
         return services;
     }

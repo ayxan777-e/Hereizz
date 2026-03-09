@@ -34,6 +34,7 @@ using (var scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
 
     await ProductSeeder.SeedAsync(context);
+    await ShippingOptionSeeder.SeedAsync(context);
 }
 
 app.Run();
