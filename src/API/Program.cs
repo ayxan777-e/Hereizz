@@ -1,5 +1,8 @@
 using Application.Mappings;
 using Infrastructure.Extensions;
+using Infrastructure.Persistence.Context;
+using Infrastructure.Persistence.Seed;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,5 +26,14 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<HereizzzDbContext>();
+
+    await context.Database.MigrateAsync();
+
+    await ProductSeeder.SeedAsync(context);
+}
 
 app.Run();
