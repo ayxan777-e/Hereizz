@@ -1,3 +1,4 @@
+using Application.Mappings;
 using Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+builder.Services.AddAutoMapper(typeof(ProductMappingProfile));
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
