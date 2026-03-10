@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Application.Services;
+using Application.Services.FeeRules;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,10 @@ public static class ServiceCollectionExtensions
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         //Scopes
+        services.AddScoped<IFeeCalculator, FeeCalculator>();
+        services.AddScoped<IFeeRule, CustomsFeeRule>();
+        services.AddScoped<IFeeRule, WarehouseFeeRule>();
+        services.AddScoped<IFeeRule, LocalDeliveryFeeRule>();
         services.AddScoped<IShippingOptionRepository, ShippingOptionRepository>();
         services.AddScoped<IRouteSelectionService, RouteSelectionService>();
         services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
