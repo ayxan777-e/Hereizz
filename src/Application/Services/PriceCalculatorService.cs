@@ -46,6 +46,7 @@ public class PriceCalculatorService : IPriceCalculatorService
 
             results.Add(new PriceCalculationResponse
             {
+                ProductTitle = product.Title,
                 ShippingOptionName = option.Name,
                 ProductPrice = product.Price,
                 ShippingCost = shippingCost,

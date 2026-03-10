@@ -16,7 +16,6 @@ public static class ProductSeeder
         {
             new Product
             {
-                Id=1,
                 Title = "Apple Watch Series 9",
                 Description = "Latest Apple smartwatch",
                 Price = 399,
@@ -55,6 +54,20 @@ public static class ProductSeeder
                 Category = "Watch",
                 ImageUrl = "",
                 AffiliateUrl = "https://trendyol.com/casio-gshock",
+                CreatedAt = DateTime.UtcNow
+            },
+            new Product
+            {
+                Title = "Gaming Chair Pro X",
+                Description = "Large ergonomic gaming chair",
+                Price = 220,
+                Currency = Currency.USD,
+                Marketplace = Marketplace.Amazon,
+                OriginCountry = Country.USA,
+                WeightKg = 8m,
+                Category = "Furniture",
+                ImageUrl = "",
+                AffiliateUrl = "https://amazon.com/gaming-chair",
                 CreatedAt = DateTime.UtcNow
             }
         };
