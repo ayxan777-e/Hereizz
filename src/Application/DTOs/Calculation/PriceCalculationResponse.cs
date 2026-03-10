@@ -4,8 +4,6 @@ namespace Application.DTOs.Calculation;
 
 public class PriceCalculationResponse
 {
-    public int ProductId { get; set; }
-
     public string ProductTitle { get; set; } = null!;
     public string ShippingOptionName { get; set; } = null!;
 
