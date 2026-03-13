@@ -1,6 +1,7 @@
 ﻿using Application.DTOs.Calculation;
-using Application.Interfaces.Services;
+using Application.Queries.Routes;
 using Application.Shared.Responses;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -9,17 +10,17 @@ namespace API.Controllers;
 [Route("api/[controller]")]
 public class RoutesController : ControllerBase
 {
-    private readonly IRouteSelectionService _routeSelectionService;
+    private readonly IMediator _mediator;
 
-    public RoutesController(IRouteSelectionService routeSelectionService)
+    public RoutesController(IMediator mediator)
     {
-        _routeSelectionService = routeSelectionService;
+        _mediator = mediator;
     }
 
     [HttpGet("{productId}")]
     public async Task<ActionResult<BaseResponse<RouteSelectionResponse>>> GetBestRoutes(int productId, CancellationToken ct)
     {
-        var result = await _routeSelectionService.SelectBestRoutesAsync(productId, ct);
+        var result = await _mediator.Send(new GetBestRoutesQuery(productId), ct);
 
         if (!result.Success)
             return NotFound(result);

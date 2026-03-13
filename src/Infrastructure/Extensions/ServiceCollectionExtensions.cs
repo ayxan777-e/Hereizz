@@ -7,6 +7,8 @@ using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Application.Queries.Routes;
+using MediatR;
 
 namespace Infrastructure.Extensions;
 
@@ -16,7 +18,11 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<HereizzzDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
+        
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(GetBestRoutesQueryHandler).Assembly);
+        });
         //Scopes
         services.AddScoped<IFeeCalculator, FeeCalculator>();
         services.AddScoped<IFeeRule, CustomsFeeRule>();
