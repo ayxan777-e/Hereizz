@@ -22,7 +22,7 @@ public class Order : BaseEntity<int>
 
     public decimal FinalPrice { get; set; }
 
-    public OrderStatus Status { get; set; }
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
 
     public Product Product { get; set; } = null!;

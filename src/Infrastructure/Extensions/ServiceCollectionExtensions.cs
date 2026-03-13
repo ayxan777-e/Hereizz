@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Application.Queries.Routes;
 using Application.Services;
 using Application.Services.FeeRules;
 using Infrastructure.Persistence.Context;
@@ -7,8 +8,6 @@ using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Application.Queries.Routes;
-using MediatR;
 
 namespace Infrastructure.Extensions;
 
@@ -24,6 +23,7 @@ public static class ServiceCollectionExtensions
             cfg.RegisterServicesFromAssembly(typeof(GetBestRoutesQueryHandler).Assembly);
         });
         //Scopes
+        services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IFeeCalculator, FeeCalculator>();
         services.AddScoped<IFeeRule, CustomsFeeRule>();
         services.AddScoped<IFeeRule, WarehouseFeeRule>();
