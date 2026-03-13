@@ -1,4 +1,5 @@
 ﻿using Application.Commands.Orders.CreateOrder;
+using Application.Commands.Orders.DeleteOrder;
 using Application.Commands.Orders.UpdateOrderStatus;
 using Application.DTOs.Orders;
 using Application.Queries.Orders.GetOrderById;
@@ -67,6 +68,17 @@ public class OrdersController : ControllerBase
 
         if (!result.Success)
             return BadRequest(result);
+
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<BaseResponse<bool>>> DeleteOrder(int id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new DeleteOrderCommand(id), ct);
+
+        if (!result.Success)
+            return NotFound(result);
 
         return Ok(result);
     }
