@@ -1,4 +1,5 @@
 ﻿using Application.Commands.Orders.CreateOrder;
+using Application.Commands.Orders.UpdateOrderStatus;
 using Application.DTOs.Orders;
 using Application.Queries.Orders.GetOrderById;
 using Application.Queries.Orders.GetOrders;
@@ -30,6 +31,26 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<BaseResponse<OrderDetailsDto>>> GetOrder(int id, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetOrderByIdQuery(id), ct);
+
+        if (!result.Success)
+            return NotFound(result);
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult<BaseResponse<bool>>> UpdateStatus(
+    int id,
+    UpdateOrderStatusRequest request,
+    CancellationToken ct)
+    {
+        var command = new UpdateOrderStatusCommand
+        {
+            OrderId = id,
+            Status = request.Status
+        };
+
+        var result = await _mediator.Send(command, ct);
 
         if (!result.Success)
             return NotFound(result);
