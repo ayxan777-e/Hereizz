@@ -1,6 +1,8 @@
 ﻿using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Application.Queries.Routes;
 using Application.Services;
+using Application.Services.FeeRules;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -15,8 +17,17 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<HereizzzDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
+        
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(GetBestRoutesQueryHandler).Assembly);
+        });
         //Scopes
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IFeeCalculator, FeeCalculator>();
+        services.AddScoped<IFeeRule, CustomsFeeRule>();
+        services.AddScoped<IFeeRule, WarehouseFeeRule>();
+        services.AddScoped<IFeeRule, LocalDeliveryFeeRule>();
         services.AddScoped<IShippingOptionRepository, ShippingOptionRepository>();
         services.AddScoped<IRouteSelectionService, RouteSelectionService>();
         services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));

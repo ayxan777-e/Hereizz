@@ -1,31 +1,25 @@
-﻿using Domain.Entities.Common;
-using Domain.Enums;
+﻿namespace Application.DTOs.Orders;
 
-namespace Domain.Entities;
-
-public class Order : BaseEntity<int>
+public class OrderDetailsDto
 {
+    public int Id { get; set; }
 
     public int ProductId { get; set; }
+    public string ProductTitle { get; set; } = string.Empty;
 
     public int ShippingOptionId { get; set; }
+    public string ShippingOptionName { get; set; } = string.Empty;
 
     public decimal ProductPrice { get; set; }
-
     public decimal ShippingCost { get; set; }
 
     public decimal CustomsFee { get; set; }
-
     public decimal WarehouseFee { get; set; }
-
     public decimal LocalDeliveryFee { get; set; }
 
     public decimal FinalPrice { get; set; }
 
-    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+    public string Status { get; set; } = string.Empty;
 
-
-    public Product Product { get; set; } = null!;
-
-    public ShippingOption ShippingOption { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
 }

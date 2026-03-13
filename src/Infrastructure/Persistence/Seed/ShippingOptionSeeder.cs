@@ -17,27 +17,13 @@ public static class ShippingOptionSeeder
             new ShippingOption
             {
                 Name = "USA Air Cargo",
-                OriginCountry = (Country) 2,
-                DestinationCountry = (Country)1,
-                TransportType = (TransportType)1,
+                OriginCountry = Country.USA,
+                DestinationCountry = Country.Azerbaijan,
+                TransportType = TransportType.Air,
                 EstimatedMinDays = 5,
                 EstimatedMaxDays = 8,
-                PricePerKg = 10,
-                FixedFee = 5,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-
-            new ShippingOption
-            {
-                Name = "Turkey Truck Delivery",
-                OriginCountry = (Country) 3,
-                DestinationCountry = (Country) 1,
-                TransportType = (TransportType) 3,
-                EstimatedMinDays = 3,
-                EstimatedMaxDays = 5,
-                PricePerKg = 6,
-                FixedFee = 3,
+                PricePerKg = 12m,
+                FixedFee = 6m,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -45,13 +31,27 @@ public static class ShippingOptionSeeder
             new ShippingOption
             {
                 Name = "USA Sea Cargo",
-                OriginCountry = (Country) 2,
-                DestinationCountry = (Country) 1,
-                TransportType = (TransportType) 2,
-                EstimatedMinDays = 25,
-                EstimatedMaxDays = 35,
-                PricePerKg = 4,
-                FixedFee = 10,
+                OriginCountry = Country.USA,
+                DestinationCountry = Country.Azerbaijan,
+                TransportType = TransportType.Sea,
+                EstimatedMinDays = 20,
+                EstimatedMaxDays = 30,
+                PricePerKg = 3m,
+                FixedFee = 12m,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+
+            new ShippingOption
+            {
+                Name = "Turkey Truck Delivery",
+                OriginCountry = Country.Turkey,
+                DestinationCountry = Country.Azerbaijan,
+                TransportType = TransportType.Truck,
+                EstimatedMinDays = 3,
+                EstimatedMaxDays = 5,
+                PricePerKg = 6m,
+                FixedFee = 3m,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             }

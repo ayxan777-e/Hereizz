@@ -4,9 +4,8 @@ namespace Application.DTOs.Calculation;
 
 public class PriceCalculationResponse
 {
-    public int ProductId { get; set; }
-
     public string ProductTitle { get; set; } = null!;
+    public string ShippingOptionName { get; set; } = null!;
 
     public decimal ProductPrice { get; set; }
 
@@ -25,4 +24,5 @@ public class PriceCalculationResponse
     public int EstimatedMinDays { get; set; }
 
     public int EstimatedMaxDays { get; set; }
+    public List<FeeBreakdownItem> Fees { get; set; } = new();
 }
