@@ -1,8 +1,9 @@
 ﻿using Application.DTOs.Calculation;
+using Application.Shared.Responses;
 
 namespace Application.Interfaces.Services;
 
 public interface IRouteSelectionService
 {
-    Task<RouteSelectionResponse> SelectBestRoutesAsync(int productId, CancellationToken ct);
+    Task<BaseResponse<RouteSelectionResponse>> SelectBestRoutesAsync(int productId, CancellationToken ct);
 }

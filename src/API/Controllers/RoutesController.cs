@@ -1,5 +1,6 @@
 ﻿using Application.DTOs.Calculation;
 using Application.Interfaces.Services;
+using Application.Shared.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -16,9 +17,13 @@ public class RoutesController : ControllerBase
     }
 
     [HttpGet("{productId}")]
-    public async Task<ActionResult<RouteSelectionResponse>> GetBestRoutes(int productId, CancellationToken ct)
+    public async Task<ActionResult<BaseResponse<RouteSelectionResponse>>> GetBestRoutes(int productId, CancellationToken ct)
     {
         var result = await _routeSelectionService.SelectBestRoutesAsync(productId, ct);
+
+        if (!result.Success)
+            return NotFound(result);
+
         return Ok(result);
     }
 }
