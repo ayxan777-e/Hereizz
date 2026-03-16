@@ -16,14 +16,7 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
 
     public async Task<BaseResponse<bool>> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
     {
-        if (!Enum.IsDefined(typeof(OrderStatus), request.Status))
-        {
-            return BaseResponse<bool>.Fail(
-                "Invalid status",
-                new List<string> { "Provided order status is not valid" }
-            );
-        }
-
+       
         var order = await _orderRepository.GetByIdAsync(request.OrderId, cancellationToken);
 
         if (order is null)

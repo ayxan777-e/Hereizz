@@ -8,10 +8,11 @@ public class UpdateOrderStatusCommandValidator : AbstractValidator<UpdateOrderSt
     public UpdateOrderStatusCommandValidator()
     {
         RuleFor(x => x.OrderId)
-            .GreaterThan(0);
+            .GreaterThan(0)
+            .WithMessage("OrderId must be greater than 0.");
 
         RuleFor(x => x.Status)
-            .Must(status => Enum.IsDefined(status))
-            .WithMessage("Invalid order status");
+            .IsInEnum()
+            .WithMessage("Invalid order status.");
     }
 }
