@@ -21,7 +21,8 @@ public class DeleteOrderCommandHandler : IRequestHandler<DeleteOrderCommand, Bas
         {
             return BaseResponse<bool>.Fail(
                 "Order not found",
-                new List<string> { "Order with given id does not exist" }
+                new List<string> { "Order with given id does not exist" },
+                ErrorType.NotFound
             );
         }
 

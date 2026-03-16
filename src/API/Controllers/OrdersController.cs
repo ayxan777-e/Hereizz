@@ -54,7 +54,12 @@ public class OrdersController : ControllerBase
         var result = await _mediator.Send(command, ct);
 
         if (!result.Success)
-            return NotFound(result);
+        {
+            if (result.Message == "Order not found")
+                return NotFound(result);
+
+            return BadRequest(result);
+        }
 
         return Ok(result);
     }

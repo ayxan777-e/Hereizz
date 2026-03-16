@@ -22,7 +22,8 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, BaseR
         {
             return BaseResponse<OrderDetailsDto>.Fail(
                 "Order not found",
-                new List<string> { "Order with given id does not exist" }
+                new List<string> { "Order with given id does not exist" },
+                ErrorType.NotFound
             );
         }
 
