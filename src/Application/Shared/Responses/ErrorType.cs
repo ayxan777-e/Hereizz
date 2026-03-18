@@ -7,5 +7,6 @@ public enum ErrorType
     NotFound = 2,
     BusinessRule = 3,
     Conflict = 4,
-    Unauthorized = 5
+    Unauthorized = 5,
+    BadRequest = 6
 }
