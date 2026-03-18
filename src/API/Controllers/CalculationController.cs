@@ -1,5 +1,6 @@
 ﻿using Application.DTOs.Calculation;
-using Application.Interfaces.Services;
+using Application.Queries.Calculation.CalculatePrice;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -8,11 +9,11 @@ namespace API.Controllers;
 [Route("api/[controller]")]
 public class CalculationController : ControllerBase
 {
-    private readonly IPriceCalculatorService _priceCalculatorService;
+    private readonly IMediator _mediator;
 
-    public CalculationController(IPriceCalculatorService priceCalculatorService)
+    public CalculationController(IMediator mediator)
     {
-        _priceCalculatorService = priceCalculatorService;
+        _mediator = mediator;
     }
 
     [HttpGet("{productId}")]
@@ -20,7 +21,7 @@ public class CalculationController : ControllerBase
         int productId,
         CancellationToken ct)
     {
-        var result = await _priceCalculatorService.CalculateAsync(productId, ct);
+        var result = await _mediator.Send(new CalculatePriceQuery(productId), ct);
 
         return Ok(result);
     }

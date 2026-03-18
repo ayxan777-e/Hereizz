@@ -19,31 +19,98 @@ public class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
-        catch (ValidationException ex)
+        catch (Exception ex)
         {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            context.Response.ContentType = "application/json";
-
-            var errors = ex.Errors
-                .Select(e => e.ErrorMessage)
-                .Distinct()
-                .ToList();
-
-            var response = BaseResponse.Fail("Validation failed", errors);
-
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+            await HandleExceptionAsync(context, ex);
         }
-        catch (Exception)
+    }
+
+    private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
+    {
+        context.Response.ContentType = "application/json";
+
+        BaseResponse response;
+
+        switch (ex)
         {
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            context.Response.ContentType = "application/json";
+            case ValidationException validationException:
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
 
-            var response = BaseResponse.Fail(
-                "Internal server error",
-                new List<string> { "An unexpected error occurred." }
-            );
+                    var errors = validationException.Errors
+                        .Select(e => e.ErrorMessage)
+                        .Distinct()
+                        .ToList();
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                    response = BaseResponse.Fail(
+                        "Validation failed",
+                        errors,
+                        ErrorType.BadRequest
+                    );
+                    break;
+                }
+
+            case KeyNotFoundException keyNotFoundException:
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+
+                    response = BaseResponse.Fail(
+                        "Resource not found",
+                        new List<string> { keyNotFoundException.Message },
+                        ErrorType.NotFound
+                    );
+                    break;
+                }
+
+            case UnauthorizedAccessException unauthorizedAccessException:
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+                    response = BaseResponse.Fail(
+                        "Unauthorized",
+                        new List<string> { unauthorizedAccessException.Message },
+                        ErrorType.Unauthorized
+                    );
+                    break;
+                }
+
+            case ArgumentException argumentException:
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                    response = BaseResponse.Fail(
+                        "Bad request",
+                        new List<string> { argumentException.Message },
+                        ErrorType.BadRequest
+                    );
+                    break;
+                }
+
+            case InvalidOperationException invalidOperationException:
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                    response = BaseResponse.Fail(
+                        "Operation is not valid",
+                        new List<string> { invalidOperationException.Message },
+                        ErrorType.BadRequest
+                    );
+                    break;
+                }
+
+            default:
+                {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+                    response = BaseResponse.Fail(
+                        "Internal server error",
+                        new List<string> { "An unexpected error occurred." },
+                        ErrorType.ServerError
+                    );
+                    break;
+                }
         }
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 }
