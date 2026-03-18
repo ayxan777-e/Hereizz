@@ -17,6 +17,7 @@ public class HereizzzDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(HereizzzDbContext).Assembly);
     }
 

@@ -29,4 +29,11 @@ public class OrderRepository : GenericRepository<Order, int>, IOrderRepository
             .Include(x => x.ShippingOption)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
+    public IQueryable<Order> GetQueryableWithDetails()
+    {
+        return _context.Orders
+            .Include(x => x.Product)
+            .Include(x => x.ShippingOption)
+            .AsQueryable();
+    }
 }

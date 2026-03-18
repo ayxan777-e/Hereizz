@@ -1,6 +1,6 @@
-﻿using Application.Interfaces.Repositories;
+﻿using Application.Helpers;
+using Application.Interfaces.Repositories;
 using Application.Shared.Responses;
-using Domain.Enums;
 using MediatR;
 
 namespace Application.Commands.Orders.UpdateOrderStatus;
@@ -16,21 +16,23 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
 
     public async Task<BaseResponse<bool>> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
     {
-        if (!Enum.IsDefined(typeof(OrderStatus), request.Status))
-        {
-            return BaseResponse<bool>.Fail(
-                "Invalid status",
-                new List<string> { "Provided order status is not valid" }
-            );
-        }
-
         var order = await _orderRepository.GetByIdAsync(request.OrderId, cancellationToken);
 
         if (order is null)
         {
             return BaseResponse<bool>.Fail(
                 "Order not found",
-                new List<string> { "Order with given id does not exist" }
+                new List<string> { "Order with given id does not exist" },
+                ErrorType.NotFound
+            );
+        }
+
+        if (!OrderStatusTransitionRule.CanTransition(order.Status, request.Status))
+        {
+            return BaseResponse<bool>.Fail(
+                "Invalid status transition",
+                new List<string> { $"Cannot change status from {order.Status} to {request.Status}" },
+                ErrorType.BusinessRule
             );
         }
 

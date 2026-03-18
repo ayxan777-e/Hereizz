@@ -2,8 +2,8 @@
 using Application.Commands.Orders.DeleteOrder;
 using Application.Commands.Orders.UpdateOrderStatus;
 using Application.DTOs.Orders;
+using Application.Queries.Orders.GetAllOrders;
 using Application.Queries.Orders.GetOrderById;
-using Application.Queries.Orders.GetOrders;
 using Application.Shared.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -22,10 +22,10 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<BaseResponse<List<OrderListItemDto>>>> GetOrders(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] GetOrdersQuery query)
     {
-        var result = await _mediator.Send(new GetOrdersQuery(), ct);
-        return Ok(result);
+        var result = await _mediator.Send(query);
+        return StatusCode((int)result.ErrorType, result);
     }
 
     [HttpGet("{id}")]
@@ -54,7 +54,12 @@ public class OrdersController : ControllerBase
         var result = await _mediator.Send(command, ct);
 
         if (!result.Success)
-            return NotFound(result);
+        {
+            if (result.Message == "Order not found")
+                return NotFound(result);
+
+            return BadRequest(result);
+        }
 
         return Ok(result);
     }

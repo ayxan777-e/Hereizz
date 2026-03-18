@@ -1,10 +1,14 @@
-﻿using Application.Interfaces.Repositories;
+﻿using Application.Behaviors;
+using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Application.Queries.Routes;
 using Application.Services;
 using Application.Services.FeeRules;
+using Application.Validators.Orders;
+using FluentValidation;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Repositories;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +21,9 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<HereizzzDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-        
+
+        services.AddValidatorsFromAssembly(typeof(CreateOrderCommandValidator).Assembly);
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(GetBestRoutesQueryHandler).Assembly);
