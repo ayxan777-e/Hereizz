@@ -26,7 +26,7 @@ public class PriceCalculatorService : IPriceCalculatorService
         var product = await _productRepository.GetByIdAsync(productId, ct);
 
         if (product is null)
-            return new List<PriceCalculationResponse>();
+            throw new KeyNotFoundException("Product not found");
 
         var shippingOptions = await _shippingRepository.GetByOriginCountryAsync(product.OriginCountry, ct);
 

@@ -8,5 +8,7 @@ public enum ErrorType
     BusinessRule = 3,
     Conflict = 4,
     Unauthorized = 5,
-    BadRequest = 6
+    BadRequest = 6,
+    ServerError = 7,
+    Forbidden = 8
 }
