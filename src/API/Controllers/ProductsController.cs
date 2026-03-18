@@ -1,5 +1,7 @@
 ﻿using Application.DTOs.Product;
-using Application.Interfaces.Services;
+using Application.Queries.Products.GetProductById;
+using Application.Queries.Products.GetProducts;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -8,28 +10,28 @@ namespace API.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-    private readonly IProductService _productService;
+    private readonly IMediator _mediator;
 
-    public ProductsController(IProductService productService)
+    public ProductsController(IMediator mediator)
     {
-        _productService = productService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<ActionResult<List<ProductListItemResponse>>> GetAll(CancellationToken ct)
     {
-        var products = await _productService.GetAllAsync(ct);
-        return Ok(products);
+        var result = await _mediator.Send(new GetProductsQuery(), ct);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<ProductDetailResponse>> GetById(int id, CancellationToken ct)
     {
-        var product = await _productService.GetByIdAsync(id, ct);
+        var result = await _mediator.Send(new GetProductByIdQuery(id), ct);
 
-        if (product == null)
+        if (result is null)
             return NotFound();
 
-        return Ok(product);
+        return Ok(result);
     }
 }
