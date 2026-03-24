@@ -5,13 +5,16 @@ using Application.Queries.Routes;
 using Application.Services;
 using Application.Services.FeeRules;
 using Application.Validators.Orders;
+using Domain.Entities;
 using FluentValidation;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Repositories;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace Infrastructure.Extensions;
 
@@ -40,6 +43,26 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+
+        return services;
+    }
+    public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDbContext<HereizzzDbContext>(options =>
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+        services.AddIdentity<User, IdentityRole>(options =>
+        {
+            options.Password.RequiredLength = 6;
+            options.Password.RequireDigit = true;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+
+            options.User.RequireUniqueEmail = true;
+        })
+        .AddEntityFrameworkStores<HereizzzDbContext>()
+        .AddDefaultTokenProviders();
 
         return services;
     }

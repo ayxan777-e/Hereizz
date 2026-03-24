@@ -1,9 +1,10 @@
 ﻿using Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Context;
 
-public class HereizzzDbContext : DbContext
+public class HereizzzDbContext : IdentityDbContext
 {
     public HereizzzDbContext(DbContextOptions<HereizzzDbContext> options)
         : base(options)
