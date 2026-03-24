@@ -1,17 +1,23 @@
-﻿using Application.Behaviors;
+﻿using System.Text;
+using Application.Behaviors;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Application.Options;
 using Application.Queries.Routes;
 using Application.Services;
 using Application.Services.FeeRules;
 using Application.Validators.Orders;
+using Domain.Entities;
 using FluentValidation;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Repositories;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Extensions;
 
@@ -22,13 +28,57 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<HereizzzDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
+        services.AddIdentity<User, IdentityRole>(options =>
+        {
+            options.Password.RequiredLength = 6;
+            options.Password.RequireDigit = true;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.User.RequireUniqueEmail = true;
+        })
+        .AddEntityFrameworkStores<HereizzzDbContext>()
+        .AddDefaultTokenProviders();
+
+        services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+
+        var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>();
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtOptions!.Issuer,
+
+                ValidateAudience = true,
+                ValidAudience = jwtOptions.Audience,
+
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
         services.AddValidatorsFromAssembly(typeof(CreateOrderCommandValidator).Assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(GetBestRoutesQueryHandler).Assembly);
         });
-        //Scopes
+
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IFeeCalculator, FeeCalculator>();
         services.AddScoped<IFeeRule, CustomsFeeRule>();
@@ -40,6 +90,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+        services.AddScoped<ICartRepository, CartRepository>();
+
+        services.AddHttpContextAccessor();
 
         return services;
     }
