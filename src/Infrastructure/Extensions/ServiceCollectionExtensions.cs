@@ -90,6 +90,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
+        services.AddScoped<ICartRepository, CartRepository>();
 
         services.AddHttpContextAccessor();
 
