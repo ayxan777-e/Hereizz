@@ -103,9 +103,9 @@ public class ExceptionHandlingMiddleware
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
                     response = BaseResponse.Fail(
-                        "Internal server error",
-                        new List<string> { "An unexpected error occurred." },
-                        ErrorType.ServerError
+                       ex.Message,
+    new List<string> { ex.StackTrace ?? "no stack" },
+    ErrorType.ServerError
                     );
                     break;
                 }

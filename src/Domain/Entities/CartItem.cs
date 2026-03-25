@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Enums;
+
+namespace Domain.Entities;
 
 public class CartItem
 {
@@ -23,7 +25,7 @@ public class CartItem
 
     // 🔥 Route məlumatı
     public string ShippingOptionName { get; set; } = null!;
-    public string TransportType { get; set; } = null!;
+    public TransportType TransportType { get; set; }
 
     public int EstimatedMinDays { get; set; }
     public int EstimatedMaxDays { get; set; }

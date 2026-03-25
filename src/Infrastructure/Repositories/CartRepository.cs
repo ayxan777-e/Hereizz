@@ -18,7 +18,7 @@ public class CartRepository : ICartRepository
     {
         return await _context.Carts
             .Include(x => x.Items)
-                .ThenInclude(x => x.Product)
+                     .ThenInclude(x => x.Product)
             .FirstOrDefaultAsync(x => x.UserId == userId, ct);
     }
 

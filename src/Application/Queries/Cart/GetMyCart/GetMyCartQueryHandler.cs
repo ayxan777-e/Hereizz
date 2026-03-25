@@ -74,7 +74,7 @@ public class GetMyCartQueryHandler : IRequestHandler<GetMyCartQuery, BaseRespons
                 LocalDeliveryFee = x.LocalDeliveryFee,
                 FinalPrice = x.FinalPrice,
                 ShippingOptionName = x.ShippingOptionName,
-                TransportType = x.TransportType,
+                TransportType = x.TransportType.ToString(),
                 EstimatedMinDays = x.EstimatedMinDays,
                 EstimatedMaxDays = x.EstimatedMaxDays
             }).ToList()
