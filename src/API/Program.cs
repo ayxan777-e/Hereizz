@@ -76,6 +76,12 @@ using (var scope = app.Services.CreateScope())
 
     await ProductSeeder.SeedAsync(context);
     await ShippingOptionSeeder.SeedAsync(context);
+
+    var productCount = await context.Products.CountAsync();
+    var shippingCount = await context.ShippingOptions.CountAsync();
+
+    Console.WriteLine($"Products count: {productCount}");
+    Console.WriteLine($"ShippingOptions count: {shippingCount}");
 }
 
 app.Run();

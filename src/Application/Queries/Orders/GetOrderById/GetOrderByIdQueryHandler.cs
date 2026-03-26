@@ -30,18 +30,28 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, BaseR
         var dto = new OrderDetailsDto
         {
             Id = order.Id,
-            ProductId = order.ProductId,
-            ProductTitle = order.Product.Title,
-            ShippingOptionId = order.ShippingOptionId,
-            ShippingOptionName = order.ShippingOption.Name,
-            ProductPrice = order.ProductPrice,
-            ShippingCost = order.ShippingCost,
-            CustomsFee = order.CustomsFee,
-            WarehouseFee = order.WarehouseFee,
-            LocalDeliveryFee = order.LocalDeliveryFee,
-            FinalPrice = order.FinalPrice,
+            UserId = order.UserId,
+            TotalPrice = order.TotalPrice,
             Status = order.Status.ToString(),
-            CreatedAt = order.CreatedAt
+            CreatedAt = order.CreatedAt,
+            Items = order.Items.Select(x => new OrderItemDetailsDto
+            {
+                Id = x.Id,
+                ProductId = x.ProductId,
+                ProductTitle = x.ProductTitle,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                ShippingOptionId = x.ShippingOptionId,
+                ShippingOptionName = x.ShippingOptionName,
+                ShippingCost = x.ShippingCost,
+                CustomsFee = x.CustomsFee,
+                WarehouseFee = x.WarehouseFee,
+                LocalDeliveryFee = x.LocalDeliveryFee,
+                FinalPrice = x.FinalPrice,
+                TransportType = x.TransportType,
+                EstimatedMinDays = x.EstimatedMinDays,
+                EstimatedMaxDays = x.EstimatedMaxDays
+            }).ToList()
         };
 
         return BaseResponse<OrderDetailsDto>.Ok(dto, "Order fetched successfully");

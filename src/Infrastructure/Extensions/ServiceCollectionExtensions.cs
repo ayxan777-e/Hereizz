@@ -69,7 +69,7 @@ public static class ServiceCollectionExtensions
             };
         });
 
-        services.AddValidatorsFromAssembly(typeof(CreateOrderCommandValidator).Assembly);
+        services.AddValidatorsFromAssembly(typeof(DeleteOrderCommandValidator).Assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
         services.AddMediatR(cfg =>

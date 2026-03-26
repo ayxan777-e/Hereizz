@@ -1,9 +1,9 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Entities.Common;
 
-public class Cart
+namespace Domain.Entities;
+
+public class Cart: BaseEntity<int>
 {
-    public int Id { get; set; }
-
     public string UserId { get; set; } = null!;
     public User User { get; set; } = null!;
 

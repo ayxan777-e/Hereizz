@@ -10,6 +10,11 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
     {
         builder.HasKey(x => x.Id);
 
+        builder.HasOne(x => x.ShippingOption)
+             .WithMany(x => x.CartItems)
+             .HasForeignKey(x => x.ShippingOptionId)
+             .OnDelete(DeleteBehavior.Restrict);
+
         // 🔥 Cart ilə əlaqə
         builder.HasOne(x => x.Cart)
             .WithMany(x => x.Items)
@@ -18,7 +23,7 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
 
         // 🔥 Product ilə əlaqə
         builder.HasOne(x => x.Product)
-            .WithMany()
+            .WithMany(x => x.CartItems)
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -51,8 +56,8 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
             .HasMaxLength(100);
 
         builder.Property(x => x.TransportType)
-            .IsRequired()
-            .HasMaxLength(50);
+            .HasConversion<string>()
+            .IsRequired();
 
         // 🔥 Delivery days
         builder.Property(x => x.EstimatedMinDays)

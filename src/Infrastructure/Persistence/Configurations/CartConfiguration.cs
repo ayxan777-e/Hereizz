@@ -8,13 +8,11 @@ public class CartConfiguration : IEntityTypeConfiguration<Cart>
 {
     public void Configure(EntityTypeBuilder<Cart> builder)
     {
-        builder.HasKey(x => x.Id);
-
         // 🔥 User ilə əlaqə (1 user → 1 cart)
         builder.HasOne(x => x.User)
             .WithMany() // user tərəfində collection yazmamışıq
             .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // 🔥 Cart → CartItems (1 → çox)
         builder.HasMany(x => x.Items)

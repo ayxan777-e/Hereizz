@@ -1,30 +1,30 @@
-﻿using Domain.Enums;
+﻿using Domain.Entities.Common;
 
-namespace Application.DTOs.Calculation;
+namespace Domain.Entities;
 
-public class PriceCalculationResponse
+public class OrderItem : BaseEntity<int>
 {
+    public int OrderId { get; set; }
+    public Order Order { get; set; } = null!;
+
     public int ProductId { get; set; }
     public string ProductTitle { get; set; } = null!;
+
+    public int Quantity { get; set; }
+
+    public decimal UnitPrice { get; set; }
+
     public int ShippingOptionId { get; set; }
     public string ShippingOptionName { get; set; } = null!;
 
-    public decimal ProductPrice { get; set; }
-
     public decimal ShippingCost { get; set; }
-
     public decimal CustomsFee { get; set; }
-
     public decimal WarehouseFee { get; set; }
-
     public decimal LocalDeliveryFee { get; set; }
 
     public decimal FinalPrice { get; set; }
 
-    public TransportType TransportType { get; set; }
-
+    public string TransportType { get; set; } = null!;
     public int EstimatedMinDays { get; set; }
-
     public int EstimatedMaxDays { get; set; }
-    public List<FeeBreakdownItem> Fees { get; set; } = new();
 }

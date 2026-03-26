@@ -1,4 +1,4 @@
-﻿using Application.Commands.Orders.CreateOrder;
+﻿using Application.Commands.Orders.Checkout;
 using Application.Commands.Orders.DeleteOrder;
 using Application.Commands.Orders.UpdateOrderStatus;
 using Application.DTOs.Orders;
@@ -6,12 +6,14 @@ using Application.Queries.Orders.GetAllOrders;
 using Application.Queries.Orders.GetOrderById;
 using Application.Shared.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class OrdersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -64,17 +66,12 @@ public class OrdersController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost]
-    public async Task<ActionResult<BaseResponse<int>>> CreateOrder(
-        CreateOrderCommand command,
-        CancellationToken ct)
+    [HttpPost("checkout")]
+    public async Task<ActionResult<BaseResponse<int>>> Checkout(CancellationToken ct)
     {
-        var result = await _mediator.Send(command, ct);
+        var result = await _mediator.Send(new CheckoutCommand(), ct);
 
-        if (!result.Success)
-            return BadRequest(result);
-
-        return Ok(result);
+        return StatusCode((int)result.ErrorType, result);
     }
 
     [HttpDelete("{id}")]

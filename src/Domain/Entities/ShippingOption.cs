@@ -22,6 +22,5 @@ public class ShippingOption:BaseEntity<int>
     public decimal FixedFee { get; set; }
 
     public bool IsActive { get; set; }
-
-    public ICollection<Order> Orders { get; set; } = new List<Order>();
+    public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 }

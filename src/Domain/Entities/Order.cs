@@ -5,27 +5,12 @@ namespace Domain.Entities;
 
 public class Order : BaseEntity<int>
 {
-
-    public int ProductId { get; set; }
-
-    public int ShippingOptionId { get; set; }
-
-    public decimal ProductPrice { get; set; }
-
-    public decimal ShippingCost { get; set; }
-
-    public decimal CustomsFee { get; set; }
-
-    public decimal WarehouseFee { get; set; }
-
-    public decimal LocalDeliveryFee { get; set; }
-
-    public decimal FinalPrice { get; set; }
+    public string UserId { get; set; } = null!;
+    public User User { get; set; } = null!;
 
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
+    public decimal TotalPrice { get; set; }
 
-    public Product Product { get; set; } = null!;
-
-    public ShippingOption ShippingOption { get; set; } = null!;
+    public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 }

@@ -1,32 +1,36 @@
-﻿using Application.DTOs.Cart;
-using Application.Interfaces.Repositories;
+﻿using Application.Interfaces.Repositories;
 using Application.Shared.Responses;
+using Domain.Entities;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
-namespace Application.Queries.Cart.GetMyCart;
+namespace Application.Commands.Orders.Checkout;
 
-public class GetMyCartQueryHandler : IRequestHandler<GetMyCartQuery, BaseResponse<CartDto>>
+public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseResponse<int>>
 {
     private readonly ICartRepository _cartRepository;
+    private readonly IOrderRepository _orderRepository;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public GetMyCartQueryHandler(
+    public CheckoutCommandHandler(
         ICartRepository cartRepository,
+        IOrderRepository orderRepository,
         IHttpContextAccessor httpContextAccessor)
     {
         _cartRepository = cartRepository;
+        _orderRepository = orderRepository;
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<BaseResponse<CartDto>> Handle(GetMyCartQuery request, CancellationToken ct)
+    public async Task<BaseResponse<int>> Handle(CheckoutCommand request, CancellationToken ct)
     {
         var user = _httpContextAccessor.HttpContext?.User;
 
         if (user is null)
         {
-            return BaseResponse<CartDto>.Fail(
+            return BaseResponse<int>.Fail(
                 "Unauthorized",
                 new List<string> { "User context is missing." },
                 ErrorType.Unauthorized);
@@ -36,7 +40,7 @@ public class GetMyCartQueryHandler : IRequestHandler<GetMyCartQuery, BaseRespons
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            return BaseResponse<CartDto>.Fail(
+            return BaseResponse<int>.Fail(
                 "Unauthorized",
                 new List<string> { "User ID not found in token." },
                 ErrorType.Unauthorized);
@@ -44,45 +48,43 @@ public class GetMyCartQueryHandler : IRequestHandler<GetMyCartQuery, BaseRespons
 
         var cart = await _cartRepository.GetByUserIdWithItemsAsync(userId, ct);
 
-        if (cart is null)
+        if (cart is null || cart.Items is null || !cart.Items.Any())
         {
-            var emptyCart = new CartDto
-            {
-                UserId = userId,
-                Items = new List<CartItemDto>(),
-                TotalItemCount = 0,
-                TotalPrice = 0
-            };
-
-            return BaseResponse<CartDto>.Ok(emptyCart, "Cart fetched successfully");
+            return BaseResponse<int>.Fail(
+                "Checkout failed",
+                new List<string> { "Cart is empty." },
+                ErrorType.BadRequest);
         }
 
-        var dto = new CartDto
+        var order = new Order
         {
-            Id = cart.Id,
-            UserId = cart.UserId,
-            Items = cart.Items.Select(x => new CartItemDto
+            UserId = userId,
+            Status = OrderStatus.Pending,
+            Items = cart.Items.Select(x => new OrderItem
             {
-                Id = x.Id,
                 ProductId = x.ProductId,
                 ProductTitle = x.Product.Title,
                 Quantity = x.Quantity,
                 UnitPrice = x.UnitPrice,
+                ShippingOptionId = x.ShippingOptionId,
+                ShippingOptionName = x.ShippingOptionName,
                 ShippingCost = x.ShippingCost,
                 CustomsFee = x.CustomsFee,
                 WarehouseFee = x.WarehouseFee,
                 LocalDeliveryFee = x.LocalDeliveryFee,
                 FinalPrice = x.FinalPrice,
-                ShippingOptionName = x.ShippingOptionName,
                 TransportType = x.TransportType.ToString(),
                 EstimatedMinDays = x.EstimatedMinDays,
                 EstimatedMaxDays = x.EstimatedMaxDays
             }).ToList()
         };
 
-        dto.TotalItemCount = dto.Items.Sum(x => x.Quantity);
-        dto.TotalPrice = dto.Items.Sum(x => x.FinalPrice * x.Quantity);
+        order.TotalPrice = order.Items.Sum(x => x.FinalPrice * x.Quantity);
 
-        return BaseResponse<CartDto>.Ok(dto, "Cart fetched successfully");
+        await _orderRepository.AddAsync(order, ct);
+        await _cartRepository.ClearCartAsync(cart.Id, ct);
+        await _orderRepository.SaveChangesAsync(ct);
+
+        return BaseResponse<int>.Ok(order.Id, "Checkout completed successfully");
     }
 }

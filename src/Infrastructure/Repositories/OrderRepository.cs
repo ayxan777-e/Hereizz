@@ -17,23 +17,22 @@ public class OrderRepository : GenericRepository<Order, int>, IOrderRepository
     public async Task<List<Order>> GetAllWithDetailsAsync(CancellationToken ct)
     {
         return await _context.Orders
-            .Include(x => x.Product)
-            .Include(x => x.ShippingOption)
+            .Include(x => x.Items)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(ct);
     }
+
     public async Task<Order?> GetByIdWithDetailsAsync(int id, CancellationToken ct)
     {
         return await _context.Orders
-            .Include(x => x.Product)
-            .Include(x => x.ShippingOption)
+            .Include(x => x.Items)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
+
     public IQueryable<Order> GetQueryableWithDetails()
     {
         return _context.Orders
-            .Include(x => x.Product)
-            .Include(x => x.ShippingOption)
+            .Include(x => x.Items)
             .AsQueryable();
     }
 }
