@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdatedEverything : Migration
+    public partial class RefactorOrderCartCheckoutFlow : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -210,7 +210,8 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -220,7 +221,7 @@ namespace Infrastructure.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -229,30 +230,18 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ProductId = table.Column<int>(type: "int", nullable: false),
-                    ShippingOptionId = table.Column<int>(type: "int", nullable: false),
-                    ProductPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    ShippingCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    CustomsFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    WarehouseFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    LocalDeliveryFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    FinalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Orders_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Orders_ShippingOptions_ShippingOptionId",
-                        column: x => x.ShippingOptionId,
-                        principalTable: "ShippingOptions",
+                        name: "FK_Orders_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -266,6 +255,7 @@ namespace Infrastructure.Migrations
                     CartId = table.Column<int>(type: "int", nullable: false),
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
+                    ShippingOptionId = table.Column<int>(type: "int", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     ShippingCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     CustomsFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
@@ -273,9 +263,10 @@ namespace Infrastructure.Migrations
                     LocalDeliveryFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     FinalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     ShippingOptionName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TransportType = table.Column<int>(type: "int", maxLength: 50, nullable: false),
+                    TransportType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EstimatedMinDays = table.Column<int>(type: "int", nullable: false),
-                    EstimatedMaxDays = table.Column<int>(type: "int", nullable: false)
+                    EstimatedMaxDays = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -292,6 +283,46 @@ namespace Infrastructure.Migrations
                         principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CartItems_ShippingOptions_ShippingOptionId",
+                        column: x => x.ShippingOptionId,
+                        principalTable: "ShippingOptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderItem",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    ProductTitle = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    ShippingOptionId = table.Column<int>(type: "int", nullable: false),
+                    ShippingOptionName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ShippingCost = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    CustomsFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    WarehouseFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    LocalDeliveryFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    FinalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    TransportType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    EstimatedMinDays = table.Column<int>(type: "int", nullable: false),
+                    EstimatedMaxDays = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItem", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItem_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -344,20 +375,25 @@ namespace Infrastructure.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CartItems_ShippingOptionId",
+                table: "CartItems",
+                column: "ShippingOptionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Carts_UserId",
                 table: "Carts",
                 column: "UserId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Orders_ProductId",
-                table: "Orders",
-                column: "ProductId");
+                name: "IX_OrderItem_OrderId",
+                table: "OrderItem",
+                column: "OrderId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Orders_ShippingOptionId",
+                name: "IX_Orders_UserId",
                 table: "Orders",
-                column: "ShippingOptionId");
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -382,7 +418,7 @@ namespace Infrastructure.Migrations
                 name: "CartItems");
 
             migrationBuilder.DropTable(
-                name: "Orders");
+                name: "OrderItem");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -395,6 +431,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "ShippingOptions");
+
+            migrationBuilder.DropTable(
+                name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

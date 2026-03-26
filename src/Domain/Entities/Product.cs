@@ -27,6 +27,6 @@ public class Product:BaseEntity<int>
     public string AffiliateUrl { get; set; } = null!;
 
     public bool IsActive { get; set; }
+    public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
-    public ICollection<Order> Orders { get; set; } = new List<Order>();
 }

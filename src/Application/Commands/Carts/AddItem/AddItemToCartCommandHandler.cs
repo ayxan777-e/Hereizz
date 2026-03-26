@@ -73,7 +73,7 @@ public class AddItemToCartCommandHandler : IRequestHandler<AddItemToCartCommand,
         var calculations = await _priceCalculatorService.CalculateAsync(request.ProductId, ct);
 
         var selectedCalculation = calculations
-            .FirstOrDefault(x => x.ShippingOptionName == shippingOption.Name);
+            .FirstOrDefault(x => x.ShippingOptionId == shippingOption.Id);
 
         if (selectedCalculation is null)
         {
@@ -98,7 +98,7 @@ public class AddItemToCartCommandHandler : IRequestHandler<AddItemToCartCommand,
 
         var existingItem = cart.Items.FirstOrDefault(x =>
             x.ProductId == request.ProductId &&
-            x.ShippingOptionName == selectedCalculation.ShippingOptionName);
+            x.ShippingOptionId == request.ShippingOptionId);
 
         if (existingItem is not null)
         {
@@ -111,6 +111,8 @@ public class AddItemToCartCommandHandler : IRequestHandler<AddItemToCartCommand,
                 CartId = cart.Id,
                 ProductId = product.Id,
                 Quantity = request.Quantity,
+
+                ShippingOptionId = shippingOption.Id,
 
                 UnitPrice = selectedCalculation.ProductPrice,
                 ShippingCost = selectedCalculation.ShippingCost,

@@ -43,9 +43,6 @@ public class ShippingOptionConfiguration : IEntityTypeConfiguration<ShippingOpti
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 
-        builder.HasMany(x => x.Orders)
-            .WithOne(x => x.ShippingOption)
-            .HasForeignKey(x => x.ShippingOptionId)
-            .OnDelete(DeleteBehavior.Restrict);
+      
     }
 }

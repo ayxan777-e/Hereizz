@@ -22,6 +22,13 @@ public class CartRepository : ICartRepository
             .FirstOrDefaultAsync(x => x.UserId == userId, ct);
     }
 
+    public async Task ClearCartAsync(int cartId, CancellationToken ct)
+    {
+        await _context.CartItems
+                .Where(x => x.CartId == cartId)
+                .ExecuteDeleteAsync(ct);
+    }
+
     public async Task AddAsync(Cart cart, CancellationToken ct = default)
     {
         await _context.Carts.AddAsync(cart, ct);

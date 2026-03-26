@@ -47,7 +47,9 @@ public class PriceCalculatorService : IPriceCalculatorService
 
             results.Add(new PriceCalculationResponse
             {
+                ProductId = product.Id,
                 ProductTitle = product.Title,
+                ShippingOptionId = option.Id,
                 ShippingOptionName = option.Name,
                 ProductPrice = product.Price,
                 ShippingCost = shippingCost,
@@ -55,9 +57,9 @@ public class PriceCalculatorService : IPriceCalculatorService
                 WarehouseFee = warehouseFee,
                 LocalDeliveryFee = localDeliveryFee,
                 FinalPrice = finalPrice,
+                TransportType = option.TransportType,
                 EstimatedMinDays = option.EstimatedMinDays,
-                EstimatedMaxDays = option.EstimatedMaxDays,
-                Fees = fees
+                EstimatedMaxDays = option.EstimatedMaxDays
             });
         }
 

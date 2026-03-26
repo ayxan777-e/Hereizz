@@ -23,7 +23,6 @@ public class GetOrdersQueryHandler
     {
         var query = _orderRepository.GetQueryableWithDetails();
 
-        // 🔍 Status filter
         if (!string.IsNullOrWhiteSpace(request.Status))
         {
             if (Enum.TryParse<OrderStatus>(request.Status, true, out var parsedStatus))
@@ -40,10 +39,12 @@ public class GetOrdersQueryHandler
             }
         }
 
-        // 🔍 Search filter
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            query = query.Where(x => x.Product.Title.ToLower().Contains(request.SearchTerm.ToLower()));
+            var searchTerm = request.SearchTerm.ToLower();
+
+            query = query.Where(x =>
+                x.Items.Any(i => i.ProductTitle.ToLower().Contains(searchTerm)));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -55,11 +56,8 @@ public class GetOrdersQueryHandler
             .Select(x => new OrderListItemDto
             {
                 Id = x.Id,
-                ProductId = x.ProductId,
-                ProductTitle = x.Product.Title,
-                ShippingOptionId = x.ShippingOptionId,
-                ShippingOptionName = x.ShippingOption.Name,
-                FinalPrice = x.FinalPrice,
+                ItemCount = x.Items.Sum(i => i.Quantity),
+                TotalPrice = x.TotalPrice,
                 Status = x.Status.ToString(),
                 CreatedAt = x.CreatedAt
             })
