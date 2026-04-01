@@ -7,6 +7,10 @@ namespace Application.Services;
 
 public class PriceCalculatorService : IPriceCalculatorService
 {
+    private const string CustomsFeeName = "Customs";
+    private const string WarehouseFeeName = "Warehouse";
+    private const string LocalDeliveryFeeName = "LocalDelivery";
+
     private readonly IProductRepository _productRepository;
     private readonly IShippingOptionRepository _shippingRepository;
     private readonly IFeeCalculator _feeCalculator;
@@ -23,91 +27,76 @@ public class PriceCalculatorService : IPriceCalculatorService
 
     public async Task<List<PriceCalculationResponse>> CalculateAsync(int productId, CancellationToken ct)
     {
-        var product = await _productRepository.GetByIdAsync(productId, ct);
+        var product = await _productRepository.GetByIdAsync(productId, ct)
+            ?? throw new KeyNotFoundException("Product not found");
 
-        if (product is null)
-            throw new KeyNotFoundException("Product not found");
+        var shippingOptions = await _shippingRepository
+            .GetByOriginCountryAsync(product.OriginCountry, ct);
 
-        var shippingOptions = await _shippingRepository.GetByOriginCountryAsync(product.OriginCountry, ct);
-
-        var results = new List<PriceCalculationResponse>();
-
-        foreach (var option in shippingOptions)
-        {
-            var shippingCost = (product.WeightKg * option.PricePerKg) + option.FixedFee;
-
-            var fees = _feeCalculator.CalculateFees(product, option);
-            var totalFees = fees.Sum(x => x.Amount);
-
-            var customsFee = fees.FirstOrDefault(x => x.Name == "Customs")?.Amount ?? 0m;
-            var warehouseFee = fees.FirstOrDefault(x => x.Name == "Warehouse")?.Amount ?? 0m;
-            var localDeliveryFee = fees.FirstOrDefault(x => x.Name == "LocalDelivery")?.Amount ?? 0m;
-
-            var finalPrice = product.Price + shippingCost + totalFees;
-
-            results.Add(new PriceCalculationResponse
-            {
-                ProductId = product.Id,
-                ProductTitle = product.Title,
-                ShippingOptionId = option.Id,
-                ShippingOptionName = option.Name,
-                ProductPrice = product.Price,
-                ShippingCost = shippingCost,
-                CustomsFee = customsFee,
-                WarehouseFee = warehouseFee,
-                LocalDeliveryFee = localDeliveryFee,
-                FinalPrice = finalPrice,
-                TransportType = option.TransportType,
-                EstimatedMinDays = option.EstimatedMinDays,
-                EstimatedMaxDays = option.EstimatedMaxDays
-            });
-        }
-
-        return results;
+        return shippingOptions
+            .Where(option => IsEligibleForCalculation(product, option))
+            .Select(option => BuildPriceResponse(product, option))
+            .ToList();
     }
 
     public Task<PriceCalculationResponse?> CalculateForOptionAsync(Product product, ShippingOption shippingOption)
     {
-        if (product is null)
+        if (!IsEligibleForCalculation(product, shippingOption))
             return Task.FromResult<PriceCalculationResponse?>(null);
 
-        if (shippingOption is null)
-            return Task.FromResult<PriceCalculationResponse?>(null);
-
-        if (!shippingOption.IsActive)
-            return Task.FromResult<PriceCalculationResponse?>(null);
-
-        if (shippingOption.OriginCountry != product.OriginCountry)
-            return Task.FromResult<PriceCalculationResponse?>(null);
-
-        var shippingCost = (product.WeightKg * shippingOption.PricePerKg) + shippingOption.FixedFee;
-
-        var fees = _feeCalculator.CalculateFees(product, shippingOption);
-
-        var customsFee = fees.FirstOrDefault(x => x.Name == "Customs")?.Amount ?? 0m;
-        var warehouseFee = fees.FirstOrDefault(x => x.Name == "Warehouse")?.Amount ?? 0m;
-        var localDeliveryFee = fees.FirstOrDefault(x => x.Name == "LocalDelivery")?.Amount ?? 0m;
-
-        var totalFees = fees.Sum(x => x.Amount);
-
-        var finalPrice = product.Price + shippingCost + totalFees;
-
-        var response = new PriceCalculationResponse
-        {
-            ProductTitle = product.Title,
-            ShippingOptionName = shippingOption.Name,
-            ProductPrice = product.Price,
-            ShippingCost = shippingCost,
-            CustomsFee = customsFee,
-            WarehouseFee = warehouseFee,
-            LocalDeliveryFee = localDeliveryFee,
-            FinalPrice = finalPrice,
-            TransportType = shippingOption.TransportType,
-            EstimatedMinDays = shippingOption.EstimatedMinDays,
-            EstimatedMaxDays = shippingOption.EstimatedMaxDays,
-            Fees = fees
-        };
+        var response = BuildPriceResponse(product, shippingOption);
 
         return Task.FromResult<PriceCalculationResponse?>(response);
+    }
+
+    private static bool IsEligibleForCalculation(Product product, ShippingOption option)
+    {
+        if (product is null || option is null)
+            return false;
+
+        return option.IsActive &&
+               option.OriginCountry == product.OriginCountry;
+    }
+
+    private PriceCalculationResponse BuildPriceResponse(Product product, ShippingOption option)
+    {
+        var shippingCost = CalculateShippingCost(product, option);
+
+        var fees = _feeCalculator.CalculateFees(product, option);
+        var totalFees = fees.Sum(x => x.Amount);
+
+        return new PriceCalculationResponse
+        {
+            ProductId = product.Id,
+            ProductTitle = product.Title,
+
+            ShippingOptionId = option.Id,
+            ShippingOptionName = option.Name,
+
+            ProductPrice = product.Price,
+            ShippingCost = shippingCost,
+
+            CustomsFee = GetFeeAmount(fees, CustomsFeeName),
+            WarehouseFee = GetFeeAmount(fees, WarehouseFeeName),
+            LocalDeliveryFee = GetFeeAmount(fees, LocalDeliveryFeeName),
+
+            FinalPrice = product.Price + shippingCost + totalFees,
+
+            TransportType = option.TransportType,
+            EstimatedMinDays = option.EstimatedMinDays,
+            EstimatedMaxDays = option.EstimatedMaxDays,
+
+            Fees = fees
+        };
+    }
+
+    private static decimal CalculateShippingCost(Product product, ShippingOption option)
+    {
+        return (product.WeightKg * option.PricePerKg) + option.FixedFee;
+    }
+
+    private static decimal GetFeeAmount(IEnumerable<FeeBreakdownItem> fees, string feeName)
+    {
+        return fees.FirstOrDefault(x => x.Name == feeName)?.Amount ?? 0m;
     }
 }
