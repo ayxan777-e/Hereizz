@@ -1,4 +1,5 @@
-﻿using Application.DTOs.Product;
+﻿using API.Controllers.Common;
+using Application.DTOs.Product;
 using Application.Queries.Products.GetProductById;
 using Application.Queries.Products.GetProducts;
 using MediatR;

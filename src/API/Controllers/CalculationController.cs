@@ -1,4 +1,5 @@
-﻿using Application.DTOs.Calculation;
+﻿using API.Controllers.Common;
+using Application.DTOs.Calculation;
 using Application.Queries.Calculation.CalculatePrice;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CalculationController : ControllerBase
+public class CalculationController : BaseApiController
 {
     private readonly IMediator _mediator;
 

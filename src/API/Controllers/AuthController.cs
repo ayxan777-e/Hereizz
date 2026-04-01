@@ -1,4 +1,5 @@
-﻿using Application.Commands.Auth.Login;
+﻿using API.Controllers.Common;
+using Application.Commands.Auth.Login;
 using Application.Queries.Auth.GetProfile;
 using Application.Shared.Responses;
 using MediatR;
@@ -9,7 +10,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController : BaseApiController
 {
     private readonly IMediator _mediator;
 
@@ -22,14 +23,14 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register(RegisterCommand command)
     {
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return HandleResponse(result);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginCommand command)
     {
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return HandleResponse(result);
     }
 
     [Authorize]
@@ -37,6 +38,6 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Profile()
     {
         var result = await _mediator.Send(new GetProfileQuery());
-        return Ok(result);
+        return HandleResponse(result);
     }
 }
