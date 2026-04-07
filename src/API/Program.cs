@@ -1,4 +1,5 @@
 using API.Middlewares;
+using Application.Interfaces.Services;
 using Application.Mappings;
 using Infrastructure.Extensions;
 using Infrastructure.Persistence.Context;
@@ -84,11 +85,15 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<HereizzzDbContext>();
+   
+    var refreshTokenCleanupService = scope.ServiceProvider.GetRequiredService<IRefreshTokenCleanupService>();
 
     await context.Database.MigrateAsync();
 
     await ProductSeeder.SeedAsync(context);
     await ShippingOptionSeeder.SeedAsync(context);
+    await refreshTokenCleanupService.CleanupAsync(CancellationToken.None);
+
 }
 
 app.Run();

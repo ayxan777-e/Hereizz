@@ -1,7 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
-using Application.DTOs.Auth;
 using Application.Interfaces.Services;
 using Application.Options;
 using Domain.Entities;
@@ -19,7 +19,7 @@ public class JwtTokenService : IJwtTokenService
         _jwtOptions = jwtOptions.Value;
     }
 
-    public AuthResponse CreateToken(User user, IList<string> roles)
+    public string CreateAccessToken(User user, IList<string> roles)
     {
         var claims = new List<Claim>
         {
@@ -39,26 +39,32 @@ public class JwtTokenService : IJwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var expireAt = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes);
+        var expiresAt = GetAccessTokenExpireAt();
 
         var token = new JwtSecurityToken(
             issuer: _jwtOptions.Issuer,
             audience: _jwtOptions.Audience,
             claims: claims,
-            expires: expireAt,
+            expires: expiresAt,
             signingCredentials: credentials
         );
 
-        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 
-        return new AuthResponse
-        {
-            Token = tokenString,
-            ExpireAt = expireAt,
-            UserId = user.Id,
-            FullName = user.FullName,
-            UserName = user.UserName ?? string.Empty,
-            Email = user.Email ?? string.Empty
-        };
+    public DateTime GetAccessTokenExpireAt()
+    {
+        return DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes);
+    }
+
+    public string GenerateRefreshToken()
+    {
+        var randomBytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(randomBytes);
+    }
+
+    public DateTime GetRefreshTokenExpireAt()
+    {
+        return DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays);
     }
 }

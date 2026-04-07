@@ -7,4 +7,6 @@ public interface IAuthService
 {
     Task<BaseResponse<AuthResponse>> LoginAsync(string emailOrUserName, string password, CancellationToken ct);
     Task<BaseResponse> RegisterAsync(string fullName, string userName, string email, string password, CancellationToken ct);
+    Task<BaseResponse<AuthResponse>> RefreshTokenAsync(string refreshToken, CancellationToken ct);
+    Task<BaseResponse> LogoutAsync(string refreshToken, CancellationToken ct);
 }

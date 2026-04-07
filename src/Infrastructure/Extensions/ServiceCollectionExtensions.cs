@@ -94,6 +94,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
         services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<IApplicationDbContext, HereizzzDbContext>();
+        services.AddScoped<IRefreshTokenCleanupService, RefreshTokenCleanupService>();
 
         services.AddHttpContextAccessor();
 
