@@ -5,5 +5,8 @@ namespace Application.Interfaces.Services;
 
 public interface IJwtTokenService
 {
-    AuthResponse CreateToken(User user, IList<string> roles);
+    string CreateAccessToken(User user, IList<string> roles);
+    DateTime GetAccessTokenExpireAt();
+    string GenerateRefreshToken();
+    DateTime GetRefreshTokenExpireAt();
 }

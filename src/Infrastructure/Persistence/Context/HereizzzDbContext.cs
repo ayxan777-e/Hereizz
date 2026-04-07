@@ -1,10 +1,11 @@
-﻿using Domain.Entities;
+﻿using Application.Interfaces.Repositories;
+using Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Context;
 
-public class HereizzzDbContext : IdentityDbContext
+public class HereizzzDbContext : IdentityDbContext, IApplicationDbContext
 {
     public HereizzzDbContext(DbContextOptions<HereizzzDbContext> options)
         : base(options)
@@ -17,6 +18,7 @@ public class HereizzzDbContext : IdentityDbContext
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Cart> Carts { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

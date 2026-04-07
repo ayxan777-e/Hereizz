@@ -1,5 +1,7 @@
 ﻿using API.Controllers.Common;
 using Application.Commands.Auth.Login;
+using Application.Commands.Auth.Logout;
+using Application.Commands.Auth.RefreshToken;
 using Application.Queries.Auth.GetProfile;
 using Application.Shared.Responses;
 using MediatR;
@@ -33,11 +35,27 @@ public class AuthController : BaseApiController
         return HandleResponse(result);
     }
 
+
+    [HttpPost("refresh-token")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RefreshToken(RefreshTokenCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return HandleResponse(result);
+    }
     [Authorize]
     [HttpGet("profile")]
     public async Task<IActionResult> Profile()
     {
         var result = await _mediator.Send(new GetProfileQuery());
+        return HandleResponse(result);
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout(LogoutCommand command)
+    {
+        var result = await _mediator.Send(command);
         return HandleResponse(result);
     }
 }
