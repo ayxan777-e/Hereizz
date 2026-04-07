@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -10,11 +9,6 @@ namespace Application.Behaviors;
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = false
-    };
-
     private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -36,16 +30,16 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         var stopwatch = Stopwatch.StartNew();
 
         _logger.LogInformation(
-            "MediatR request started. Request={RequestName}, UserId={UserId}, Payload={Payload}",
+            "MediatR request started. Request={RequestName}, UserId={UserId}",
             requestName,
-            userId,
-            SafeSerialize(request));
+            userId);
 
         try
         {
             var response = await next();
 
             stopwatch.Stop();
+
             _logger.LogInformation(
                 "MediatR request completed. Request={RequestName}, UserId={UserId}, DurationMs={DurationMs}",
                 requestName,
@@ -57,6 +51,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         catch (Exception ex)
         {
             stopwatch.Stop();
+
             _logger.LogError(
                 ex,
                 "MediatR request failed. Request={RequestName}, UserId={UserId}, DurationMs={DurationMs}",
@@ -65,18 +60,6 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
                 stopwatch.ElapsedMilliseconds);
 
             throw;
-        }
-    }
-
-    private static string SafeSerialize(TRequest request)
-    {
-        try
-        {
-            return JsonSerializer.Serialize(request, JsonOptions);
-        }
-        catch
-        {
-            return "<unserializable-payload>";
         }
     }
 }
