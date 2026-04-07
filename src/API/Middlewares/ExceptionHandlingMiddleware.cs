@@ -7,10 +7,14 @@ namespace API.Middlewares;
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next)
+    public ExceptionHandlingMiddleware(
+        RequestDelegate next,
+        ILogger<ExceptionHandlingMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -21,6 +25,12 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
+            _logger.LogError(
+                ex,
+                "Unhandled exception occurred. Path: {Path}, Method: {Method}",
+                context.Request.Path,
+                context.Request.Method);
+
             await HandleExceptionAsync(context, ex);
         }
     }
@@ -103,9 +113,9 @@ public class ExceptionHandlingMiddleware
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
                     response = BaseResponse.Fail(
-                       ex.Message,
-    new List<string> { ex.StackTrace ?? "no stack" },
-    ErrorType.ServerError
+                        "Internal server error",
+                        new List<string> { "An unexpected error occurred." },
+                        ErrorType.ServerError
                     );
                     break;
                 }
