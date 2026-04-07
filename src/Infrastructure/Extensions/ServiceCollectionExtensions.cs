@@ -71,6 +71,7 @@ public static class ServiceCollectionExtensions
 
         services.AddValidatorsFromAssembly(typeof(DeleteOrderCommandValidator).Assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 
         services.AddMediatR(cfg =>
         {
@@ -78,6 +79,8 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICartService, CartService>();
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IFeeCalculator, FeeCalculator>();

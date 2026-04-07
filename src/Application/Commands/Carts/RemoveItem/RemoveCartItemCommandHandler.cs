@@ -1,4 +1,4 @@
-﻿using Application.Interfaces.Repositories;
+﻿using Application.Interfaces.Services;
 using Application.Shared.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -8,14 +8,14 @@ namespace Application.Commands.Cart.RemoveItem;
 
 public class RemoveCartItemCommandHandler : IRequestHandler<RemoveCartItemCommand, BaseResponse>
 {
-    private readonly ICartRepository _cartRepository;
+    private readonly ICartService _cartService;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public RemoveCartItemCommandHandler(
-        ICartRepository cartRepository,
+        ICartService cartService,
         IHttpContextAccessor httpContextAccessor)
     {
-        _cartRepository = cartRepository;
+        _cartService = cartService;
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -41,30 +41,6 @@ public class RemoveCartItemCommandHandler : IRequestHandler<RemoveCartItemComman
                 ErrorType.Unauthorized);
         }
 
-        var cart = await _cartRepository.GetByUserIdWithItemsAsync(userId, ct);
-
-        if (cart is null)
-        {
-            return BaseResponse.Fail(
-                "Cart not found",
-                new List<string> { "Cart was not found for this user." },
-                ErrorType.NotFound);
-        }
-
-        var cartItem = cart.Items.FirstOrDefault(x => x.Id == request.ItemId);
-
-        if (cartItem is null)
-        {
-            return BaseResponse.Fail(
-                "Cart item not found",
-                new List<string> { "The requested cart item does not exist in your cart." },
-                ErrorType.NotFound);
-        }
-
-        cart.Items.Remove(cartItem);
-
-        await _cartRepository.SaveChangesAsync(ct);
-
-        return BaseResponse.Ok("Cart item removed successfully.");
+        return await _cartService.RemoveItemAsync(userId, request.ItemId, ct);
     }
 }
