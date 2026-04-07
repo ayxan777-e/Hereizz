@@ -27,12 +27,14 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     {
         var requestName = typeof(TRequest).Name;
         var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous";
+        var correlationId = _httpContextAccessor.HttpContext?.Items["CorrelationId"]?.ToString() ?? "none";
         var stopwatch = Stopwatch.StartNew();
 
         _logger.LogInformation(
-            "MediatR request started. Request={RequestName}, UserId={UserId}",
+            "MediatR request started. Request={RequestName}, UserId={UserId}, CorrelationId={CorrelationId}",
             requestName,
-            userId);
+            userId,
+            correlationId);
 
         try
         {
@@ -41,9 +43,10 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
             stopwatch.Stop();
 
             _logger.LogInformation(
-                "MediatR request completed. Request={RequestName}, UserId={UserId}, DurationMs={DurationMs}",
+                "MediatR request completed. Request={RequestName}, UserId={UserId}, CorrelationId={CorrelationId}, DurationMs={DurationMs}",
                 requestName,
                 userId,
+                correlationId,
                 stopwatch.ElapsedMilliseconds);
 
             return response;
@@ -54,9 +57,10 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 
             _logger.LogError(
                 ex,
-                "MediatR request failed. Request={RequestName}, UserId={UserId}, DurationMs={DurationMs}",
+                "MediatR request failed. Request={RequestName}, UserId={UserId}, CorrelationId={CorrelationId}, DurationMs={DurationMs}",
                 requestName,
                 userId,
+                correlationId,
                 stopwatch.ElapsedMilliseconds);
 
             throw;
