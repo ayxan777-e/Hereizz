@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Application.Behaviors;
+﻿using Application.Behaviors;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Application.Options;
@@ -11,6 +10,7 @@ using Domain.Entities;
 using FluentValidation;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Infrastructure.Extensions;
 
@@ -96,6 +97,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IApplicationDbContext, HereizzzDbContext>();
         services.AddScoped<IRefreshTokenCleanupService, RefreshTokenCleanupService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         services.AddHttpContextAccessor();
 

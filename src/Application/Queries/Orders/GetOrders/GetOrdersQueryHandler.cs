@@ -1,6 +1,8 @@
 ﻿using Application.DTOs.Orders;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Application.Shared.Responses;
+using Domain.Constants;
 using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,17 +13,46 @@ public class GetOrdersQueryHandler
     : IRequestHandler<GetOrdersQuery, BaseResponse<PagedResponse<List<OrderListItemDto>>>>
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetOrdersQueryHandler(IOrderRepository orderRepository)
+    public GetOrdersQueryHandler(
+        IOrderRepository orderRepository,
+        ICurrentUserService currentUserService)
     {
         _orderRepository = orderRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<BaseResponse<PagedResponse<List<OrderListItemDto>>>> Handle(
         GetOrdersQuery request,
         CancellationToken cancellationToken)
     {
+        if (!_currentUserService.IsAuthenticated)
+        {
+            return BaseResponse<PagedResponse<List<OrderListItemDto>>>.Fail(
+                "Unauthorized",
+                new List<string> { "User is not authenticated." },
+                ErrorType.Unauthorized);
+        }
+
+        var currentUserId = _currentUserService.UserId;
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return BaseResponse<PagedResponse<List<OrderListItemDto>>>.Fail(
+                "Unauthorized",
+                new List<string> { "User ID not found in token." },
+                ErrorType.Unauthorized);
+        }
+
+        var isAdmin = _currentUserService.IsInRole(Roles.Admin);
+
         var query = _orderRepository.GetQueryableWithDetails();
+
+        if (!isAdmin)
+        {
+            query = query.Where(x => x.UserId == currentUserId);
+        }
 
         if (!string.IsNullOrWhiteSpace(request.Status))
         {
@@ -34,8 +65,7 @@ public class GetOrdersQueryHandler
                 return BaseResponse<PagedResponse<List<OrderListItemDto>>>.Fail(
                     "Invalid status",
                     new List<string> { "Provided status value is not valid." },
-                    ErrorType.BadRequest
-                );
+                    ErrorType.BadRequest);
             }
         }
 

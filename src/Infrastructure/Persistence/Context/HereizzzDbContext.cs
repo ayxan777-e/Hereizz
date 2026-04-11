@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Context;
 
-public class HereizzzDbContext : IdentityDbContext, IApplicationDbContext
+public class HereizzzDbContext : IdentityDbContext<User>, IApplicationDbContext
 {
     public HereizzzDbContext(DbContextOptions<HereizzzDbContext> options)
         : base(options)

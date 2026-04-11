@@ -5,6 +5,7 @@ using Application.DTOs.Orders;
 using Application.Queries.Orders.GetAllOrders;
 using Application.Queries.Orders.GetOrderById;
 using Application.Shared.Responses;
+using Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,18 +35,15 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<BaseResponse<OrderDetailsDto>>> GetOrder(int id, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetOrderByIdQuery(id), ct);
-
-        if (!result.Success)
-            return NotFound(result);
-
-        return Ok(result);
+        return StatusCode((int)result.ErrorType, result);
     }
 
     [HttpPatch("{id}/status")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<BaseResponse<bool>>> UpdateStatus(
-    int id,
-    UpdateOrderStatusRequest request,
-    CancellationToken ct)
+        int id,
+        UpdateOrderStatusRequest request,
+        CancellationToken ct)
     {
         var command = new UpdateOrderStatusCommand
         {
@@ -54,23 +52,13 @@ public class OrdersController : ControllerBase
         };
 
         var result = await _mediator.Send(command, ct);
-
-        if (!result.Success)
-        {
-            if (result.Message == "Order not found")
-                return NotFound(result);
-
-            return BadRequest(result);
-        }
-
-        return Ok(result);
+        return StatusCode((int)result.ErrorType, result);
     }
 
     [HttpPost("checkout")]
     public async Task<ActionResult<BaseResponse<int>>> Checkout(CancellationToken ct)
     {
         var result = await _mediator.Send(new CheckoutCommand(), ct);
-
         return StatusCode((int)result.ErrorType, result);
     }
 
@@ -78,10 +66,6 @@ public class OrdersController : ControllerBase
     public async Task<ActionResult<BaseResponse<bool>>> DeleteOrder(int id, CancellationToken ct)
     {
         var result = await _mediator.Send(new DeleteOrderCommand(id), ct);
-
-        if (!result.Success)
-            return NotFound(result);
-
-        return Ok(result);
+        return StatusCode((int)result.ErrorType, result);
     }
 }
