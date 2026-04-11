@@ -1,12 +1,11 @@
 ﻿using Application.DTOs.Orders;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Application.Shared.Responses;
 using Domain.Constants;
 using Domain.Enums;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace Application.Queries.Orders.GetAllOrders;
 
@@ -14,31 +13,29 @@ public class GetOrdersQueryHandler
     : IRequestHandler<GetOrdersQuery, BaseResponse<PagedResponse<List<OrderListItemDto>>>>
 {
     private readonly IOrderRepository _orderRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
 
     public GetOrdersQueryHandler(
         IOrderRepository orderRepository,
-        IHttpContextAccessor httpContextAccessor)
+        ICurrentUserService currentUserService)
     {
         _orderRepository = orderRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
     }
 
     public async Task<BaseResponse<PagedResponse<List<OrderListItemDto>>>> Handle(
         GetOrdersQuery request,
         CancellationToken cancellationToken)
     {
-        var user = _httpContextAccessor.HttpContext?.User;
-
-        if (user is null)
+        if (!_currentUserService.IsAuthenticated)
         {
             return BaseResponse<PagedResponse<List<OrderListItemDto>>>.Fail(
                 "Unauthorized",
-                new List<string> { "User context is missing." },
+                new List<string> { "User is not authenticated." },
                 ErrorType.Unauthorized);
         }
 
-        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var currentUserId = _currentUserService.UserId;
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
@@ -48,7 +45,7 @@ public class GetOrdersQueryHandler
                 ErrorType.Unauthorized);
         }
 
-        var isAdmin = user.IsInRole(Roles.Admin);
+        var isAdmin = _currentUserService.IsInRole(Roles.Admin);
 
         var query = _orderRepository.GetQueryableWithDetails();
 

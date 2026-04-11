@@ -1,39 +1,36 @@
 ﻿using Application.DTOs.Orders;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Application.Shared.Responses;
 using Domain.Constants;
 using MediatR;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace Application.Queries.Orders.GetOrderById;
 
 public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, BaseResponse<OrderDetailsDto>>
 {
     private readonly IOrderRepository _orderRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
 
     public GetOrderByIdQueryHandler(
         IOrderRepository orderRepository,
-        IHttpContextAccessor httpContextAccessor)
+        ICurrentUserService currentUserService)
     {
         _orderRepository = orderRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
     }
 
     public async Task<BaseResponse<OrderDetailsDto>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
     {
-        var user = _httpContextAccessor.HttpContext?.User;
-
-        if (user is null)
+        if (!_currentUserService.IsAuthenticated)
         {
             return BaseResponse<OrderDetailsDto>.Fail(
                 "Unauthorized",
-                new List<string> { "User context is missing." },
+                new List<string> { "User is not authenticated." },
                 ErrorType.Unauthorized);
         }
 
-        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var currentUserId = _currentUserService.UserId;
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
@@ -43,7 +40,7 @@ public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, BaseR
                 ErrorType.Unauthorized);
         }
 
-        var isAdmin = user.IsInRole(Roles.Admin);
+        var isAdmin = _currentUserService.IsInRole(Roles.Admin);
 
         var order = await _orderRepository.GetByIdWithDetailsAsync(request.Id, cancellationToken);
 

@@ -1,10 +1,9 @@
 ﻿using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
 using Application.Shared.Responses;
 using Domain.Entities;
 using Domain.Enums;
 using MediatR;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace Application.Commands.Orders.Checkout;
 
@@ -12,31 +11,29 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
 {
     private readonly ICartRepository _cartRepository;
     private readonly IOrderRepository _orderRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
 
     public CheckoutCommandHandler(
         ICartRepository cartRepository,
         IOrderRepository orderRepository,
-        IHttpContextAccessor httpContextAccessor)
+        ICurrentUserService currentUserService)
     {
         _cartRepository = cartRepository;
         _orderRepository = orderRepository;
-        _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
     }
 
     public async Task<BaseResponse<int>> Handle(CheckoutCommand request, CancellationToken ct)
     {
-        var user = _httpContextAccessor.HttpContext?.User;
-
-        if (user is null)
+        if (!_currentUserService.IsAuthenticated)
         {
             return BaseResponse<int>.Fail(
                 "Unauthorized",
-                new List<string> { "User context is missing." },
+                new List<string> { "User is not authenticated." },
                 ErrorType.Unauthorized);
         }
 
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _currentUserService.UserId;
 
         if (string.IsNullOrWhiteSpace(userId))
         {
