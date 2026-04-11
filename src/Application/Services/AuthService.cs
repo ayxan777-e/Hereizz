@@ -159,6 +159,21 @@ public class AuthService : IAuthService
                 errors,
                 ErrorType.Validation);
         }
+        var addToRoleResult = await _userManager.AddToRoleAsync(user, Domain.Constants.Roles.User);
+
+        if (!addToRoleResult.Succeeded)
+        {
+            var roleErrors = addToRoleResult.Errors.Select(x => x.Description).ToList();
+
+            _logger.LogWarning("User created but assigning User role failed. UserId={UserId}, Errors={Errors}",
+                user.Id,
+                string.Join(" | ", roleErrors));
+
+            return BaseResponse.Fail(
+                "Register succeeded but role assignment failed",
+                roleErrors,
+                ErrorType.ServerError);
+        }
 
         _logger.LogInformation("Register succeeded. UserId={UserId}, UserName={UserName}", user.Id, userName);
 

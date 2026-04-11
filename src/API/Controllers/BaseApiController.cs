@@ -15,6 +15,7 @@ public abstract class BaseApiController : ControllerBase
         {
             ErrorType.NotFound => NotFound(response),
             ErrorType.Unauthorized => Unauthorized(response),
+            ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, response),
             ErrorType.Conflict => Conflict(response),
             ErrorType.ServerError => StatusCode(StatusCodes.Status500InternalServerError, response),
             _ => BadRequest(response)
@@ -30,6 +31,7 @@ public abstract class BaseApiController : ControllerBase
         {
             ErrorType.NotFound => NotFound(response),
             ErrorType.Unauthorized => Unauthorized(response),
+            ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, response),
             ErrorType.Conflict => Conflict(response),
             ErrorType.ServerError => StatusCode(StatusCodes.Status500InternalServerError, response),
             _ => BadRequest(response)

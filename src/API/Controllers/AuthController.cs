@@ -58,4 +58,6 @@ public class AuthController : BaseApiController
         var result = await _mediator.Send(command);
         return HandleResponse(result);
     }
+
+
 }
