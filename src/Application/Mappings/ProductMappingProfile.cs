@@ -1,7 +1,6 @@
 ﻿using Application.DTOs.Product;
 using AutoMapper;
 using Domain.Entities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Application.Mappings;
 

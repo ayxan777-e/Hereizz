@@ -1,11 +1,12 @@
 ﻿using Application.DTOs.Product;
 using Application.Interfaces.Services;
+using Application.Shared.Responses;
 using MediatR;
 
 namespace Application.Queries.Products.GetProducts;
 
 public class GetProductsQueryHandler
-    : IRequestHandler<GetProductsQuery, List<ProductListItemResponse>>
+    : IRequestHandler<GetProductsQuery, BaseResponse<List<ProductListItemResponse>>>
 {
     private readonly IProductService _productService;
 
@@ -14,12 +15,10 @@ public class GetProductsQueryHandler
         _productService = productService;
     }
 
-    public async Task<List<ProductListItemResponse>> Handle(
+    public async Task<BaseResponse<List<ProductListItemResponse>>> Handle(
         GetProductsQuery request,
         CancellationToken cancellationToken)
     {
-        var products = await _productService.GetAllAsync(cancellationToken);
-
-        return products;
+        return await _productService.GetAllAsync(request.AdminView, cancellationToken);
     }
 }
