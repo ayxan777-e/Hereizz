@@ -5,7 +5,7 @@ namespace Domain.Entities;
 
 public class Product:BaseEntity<int>
 {
-
+    public string ExternalProductId { get; set; } = null!;
     public string Title { get; set; } = null!;
 
     public string? Description { get; set; }

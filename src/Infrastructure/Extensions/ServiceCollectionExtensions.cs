@@ -1,4 +1,5 @@
-﻿using Application.Behaviors;
+﻿using Application.Abstracts.Services;
+using Application.Behaviors;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Application.Options;
@@ -89,10 +90,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFeeRule, WarehouseFeeRule>();
         services.AddScoped<IFeeRule, LocalDeliveryFeeRule>();
         services.AddScoped<IShippingOptionRepository, ShippingOptionRepository>();
+        services.AddScoped<IShippingOptionService, ShippingOptionService>();
         services.AddScoped<IRouteSelectionService, RouteSelectionService>();
         services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IProductProviderService, MockProductProviderService>();
         services.AddScoped<IPriceCalculatorService, PriceCalculatorService>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IApplicationDbContext, HereizzzDbContext>();

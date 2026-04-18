@@ -90,7 +90,7 @@ using (var scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
 
     await IdentitySeeder.SeedAsync(scope.ServiceProvider);
-    await ProductSeeder.SeedAsync(context);
+   // await ProductSeeder.SeedAsync(context);
     await ShippingOptionSeeder.SeedAsync(context);
     await refreshTokenCleanupService.CleanupAsync(CancellationToken.None);
 }

@@ -1,7 +1,7 @@
 ﻿using Application.DTOs.Product;
+using Application.DTOs.ShippingOption;
 using AutoMapper;
 using Domain.Entities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Application.Mappings;
 
@@ -11,5 +11,7 @@ public class ProductMappingProfile : Profile
     {
         CreateMap<Product, ProductListItemResponse>();
         CreateMap<Product, ProductDetailResponse>();
+        CreateMap<ShippingOption, ShippingOptionListItemResponse>();
+        CreateMap<ShippingOption, ShippingOptionDetailResponse>();
     }
 }
