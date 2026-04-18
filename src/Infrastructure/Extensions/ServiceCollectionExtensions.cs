@@ -90,6 +90,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFeeRule, WarehouseFeeRule>();
         services.AddScoped<IFeeRule, LocalDeliveryFeeRule>();
         services.AddScoped<IShippingOptionRepository, ShippingOptionRepository>();
+        services.AddScoped<IShippingOptionService, ShippingOptionService>();
         services.AddScoped<IRouteSelectionService, RouteSelectionService>();
         services.AddScoped(typeof(IGenericRepository<,>), typeof(GenericRepository<,>));
         services.AddScoped<IProductRepository, ProductRepository>();

@@ -1,4 +1,5 @@
 ﻿using Application.DTOs.Product;
+using Application.DTOs.ShippingOption;
 using AutoMapper;
 using Domain.Entities;
 
@@ -10,5 +11,7 @@ public class ProductMappingProfile : Profile
     {
         CreateMap<Product, ProductListItemResponse>();
         CreateMap<Product, ProductDetailResponse>();
+        CreateMap<ShippingOption, ShippingOptionListItemResponse>();
+        CreateMap<ShippingOption, ShippingOptionDetailResponse>();
     }
 }
