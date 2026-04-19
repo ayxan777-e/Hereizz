@@ -1,11 +1,14 @@
 ﻿using Application.DTOs.Auth;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Application.Options;
 using Application.Shared.Responses;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Net;
 
 namespace Application.Services;
 
@@ -15,20 +18,26 @@ public class AuthService : IAuthService
     private readonly SignInManager<User> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ILogger<AuthService> _logger;
-    private readonly IApplicationDbContext _context; 
+    private readonly IApplicationDbContext _context;
+    private readonly IEmailService _emailService;
+    private readonly EmailOptions _emailOptions;
 
     public AuthService(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         IJwtTokenService jwtTokenService,
         ILogger<AuthService> logger,
-        IApplicationDbContext context)
+        IApplicationDbContext context,
+        IEmailService emailService,
+        IOptions<EmailOptions> emailOptions)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
         _logger = logger;
         _context = context;
+        _emailService = emailService;
+        _emailOptions = emailOptions.Value;
     }
 
     public async Task<BaseResponse<AuthResponse>> LoginAsync(string emailOrUserName, string password, CancellationToken ct)
@@ -45,6 +54,15 @@ public class AuthService : IAuthService
             return BaseResponse<AuthResponse>.Fail(
                 "Email/Username or password is incorrect",
                 new List<string> { "Invalid credentials." },
+                ErrorType.Unauthorized);
+        }
+
+        if (!user.EmailConfirmed)
+        {
+            _logger.LogWarning("Login blocked. Email not confirmed for UserId={UserId}", user.Id);
+            return BaseResponse<AuthResponse>.Fail(
+                "Email is not confirmed",
+                new List<string> { "Please confirm your email before logging in." },
                 ErrorType.Unauthorized);
         }
 
@@ -78,11 +96,9 @@ public class AuthService : IAuthService
                 user.Id);
         }
 
-        // 1. Access token
         var accessToken = _jwtTokenService.CreateAccessToken(user, roles);
         var accessExpire = _jwtTokenService.GetAccessTokenExpireAt();
 
-        // 2. Refresh token
         var refreshTokenValue = _jwtTokenService.GenerateRefreshToken();
         var refreshExpire = _jwtTokenService.GetRefreshTokenExpireAt();
 
@@ -95,11 +111,9 @@ public class AuthService : IAuthService
             IsRevoked = false
         };
 
-        // 3. DB-yə yaz
         _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync(ct);
 
-        // 4. Response
         var response = new AuthResponse
         {
             AccessToken = accessToken,
@@ -159,6 +173,7 @@ public class AuthService : IAuthService
                 errors,
                 ErrorType.Validation);
         }
+
         var addToRoleResult = await _userManager.AddToRoleAsync(user, Domain.Constants.Roles.User);
 
         if (!addToRoleResult.Succeeded)
@@ -175,9 +190,65 @@ public class AuthService : IAuthService
                 ErrorType.ServerError);
         }
 
+        await SendConfirmationEmailAsync(user, ct);
+
         _logger.LogInformation("Register succeeded. UserId={UserId}, UserName={UserName}", user.Id, userName);
 
-        return BaseResponse.Ok("Register successful");
+        return BaseResponse.Ok("Register successful. Please confirm your email.");
+    }
+
+    public async Task<BaseResponse> ConfirmEmailAsync(string userId, string token, CancellationToken ct)
+    {
+        _logger.LogInformation("Email confirmation requested. UserId={UserId}", userId);
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return BaseResponse.Fail(
+                "Invalid confirmation request",
+                new List<string> { "User was not found." },
+                ErrorType.BadRequest);
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return BaseResponse.Ok("Email is already confirmed");
+        }
+
+        var decodedToken = WebUtility.UrlDecode(token);
+        var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(x => x.Description).ToList();
+            return BaseResponse.Fail(
+                "Email confirmation failed",
+                errors,
+                ErrorType.BadRequest);
+        }
+
+        return BaseResponse.Ok("Email confirmed successfully");
+    }
+
+    public async Task<BaseResponse> ResendConfirmationEmailAsync(string email, CancellationToken ct)
+    {
+        _logger.LogInformation("Resend email confirmation requested. Email={Email}", email);
+
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user is null)
+        {
+            return BaseResponse.Ok("If this email exists, a confirmation email has been sent");
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return BaseResponse.Ok("Email is already confirmed");
+        }
+
+        await SendConfirmationEmailAsync(user, ct);
+
+        return BaseResponse.Ok("Confirmation email sent");
     }
 
     public async Task<BaseResponse<AuthResponse>> RefreshTokenAsync(string refreshToken, CancellationToken ct)
@@ -288,5 +359,15 @@ public class AuthService : IAuthService
         _logger.LogInformation("Logout succeeded. TokenId={TokenId}", storedRefreshToken.Id);
 
         return BaseResponse.Ok("Logged out successfully");
+    }
+
+    private async Task SendConfirmationEmailAsync(User user, CancellationToken ct)
+    {
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = WebUtility.UrlEncode(token);
+        var confirmationLink = $"{_emailOptions.ConfirmationBaseUrl}?userId={user.Id}&token={encodedToken}";
+
+        var body = $"Please confirm your email by clicking this link: <a href=\"{confirmationLink}\">Confirm Email</a>";
+        await _emailService.SendEmailAsync(user.Email!, "Confirm your email", body, ct);
     }
 }
