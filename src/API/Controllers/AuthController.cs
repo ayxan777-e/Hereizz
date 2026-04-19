@@ -1,7 +1,9 @@
 ﻿using API.Controllers.Common;
+using Application.Commands.Auth.ConfirmEmail;
 using Application.Commands.Auth.Login;
 using Application.Commands.Auth.Logout;
 using Application.Commands.Auth.RefreshToken;
+using Application.Commands.Auth.ResendConfirmationEmail;
 using Application.Queries.Auth.GetProfile;
 using Application.Shared.Responses;
 using MediatR;
@@ -35,6 +37,21 @@ public class AuthController : BaseApiController
         return HandleResponse(result);
     }
 
+
+
+    [HttpGet("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] ConfirmEmailCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return HandleResponse(result);
+    }
+
+    [HttpPost("resend-confirmation-email")]
+    public async Task<IActionResult> ResendConfirmationEmail(ResendConfirmationEmailCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return HandleResponse(result);
+    }
 
     [HttpPost("refresh-token")]
     [AllowAnonymous]

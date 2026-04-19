@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
         .AddDefaultTokenProviders();
 
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
 
         var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>();
 
@@ -81,6 +82,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICartService, CartService>();
 
