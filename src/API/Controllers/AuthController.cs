@@ -5,6 +5,7 @@ using Application.Commands.Auth.Logout;
 using Application.Commands.Auth.RefreshToken;
 using Application.Commands.Auth.ResendConfirmationEmail;
 using Application.Queries.Auth.GetProfile;
+using Application.Commands.Auth.Register;
 using Application.Shared.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

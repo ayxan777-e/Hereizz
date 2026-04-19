@@ -215,8 +215,7 @@ public class AuthService : IAuthService
             return BaseResponse.Ok("Email is already confirmed");
         }
 
-        var decodedToken = WebUtility.UrlDecode(token);
-        var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+        var result = await _userManager.ConfirmEmailAsync(user, token);
 
         if (!result.Succeeded)
         {
