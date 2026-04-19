@@ -1,21 +1,21 @@
-﻿using Application.Commands.Orders.Checkout;
+﻿using API.Controllers.Common;
+using Application.Commands.Orders.Checkout;
 using Application.Commands.Orders.DeleteOrder;
 using Application.Commands.Orders.UpdateOrderStatus;
 using Application.DTOs.Orders;
 using Application.Queries.Orders.GetAllOrders;
 using Application.Queries.Orders.GetOrderById;
-using Application.Shared.Responses;
-using Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Domain.Constants;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class OrdersController : ControllerBase
+public class OrdersController : BaseApiController
 {
     private readonly IMediator _mediator;
 
@@ -28,21 +28,21 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] GetOrdersQuery query)
     {
         var result = await _mediator.Send(query);
-        return StatusCode((int)result.ErrorType, result);
+        return HandleResponse(result);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<BaseResponse<OrderDetailsDto>>> GetOrder(int id, CancellationToken ct)
+    public async Task<IActionResult> GetOrder(int id, CancellationToken ct)
     {
         var result = await _mediator.Send(new GetOrderByIdQuery(id), ct);
-        return StatusCode((int)result.ErrorType, result);
+        return HandleResponse(result);
     }
 
     [HttpPatch("{id}/status")]
     [Authorize(Roles = Roles.Admin)]
-    public async Task<ActionResult<BaseResponse<bool>>> UpdateStatus(
+    public async Task<IActionResult> UpdateStatus(
         int id,
-        UpdateOrderStatusRequest request,
+        [FromBody] UpdateOrderStatusRequest request,
         CancellationToken ct)
     {
         var command = new UpdateOrderStatusCommand
@@ -52,20 +52,20 @@ public class OrdersController : ControllerBase
         };
 
         var result = await _mediator.Send(command, ct);
-        return StatusCode((int)result.ErrorType, result);
+        return HandleResponse(result);
     }
 
     [HttpPost("checkout")]
-    public async Task<ActionResult<BaseResponse<int>>> Checkout(CancellationToken ct)
+    public async Task<IActionResult> Checkout(CancellationToken ct)
     {
         var result = await _mediator.Send(new CheckoutCommand(), ct);
-        return StatusCode((int)result.ErrorType, result);
+        return HandleResponse(result);
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult<BaseResponse<bool>>> DeleteOrder(int id, CancellationToken ct)
+    public async Task<IActionResult> DeleteOrder(int id, CancellationToken ct)
     {
         var result = await _mediator.Send(new DeleteOrderCommand(id), ct);
-        return StatusCode((int)result.ErrorType, result);
+        return HandleResponse(result);
     }
 }
