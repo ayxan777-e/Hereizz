@@ -1,8 +1,8 @@
-﻿using Application.Interfaces.Repositories;
+﻿using Application.Helpers;
+using Application.Interfaces.Repositories;
 using Application.Shared.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
 
 namespace Application.Commands.Cart.UpdateItemQuantity;
 
@@ -21,24 +21,9 @@ public class UpdateCartItemQuantityCommandHandler : IRequestHandler<UpdateCartIt
 
     public async Task<BaseResponse> Handle(UpdateCartItemQuantityCommand request, CancellationToken ct)
     {
-        var user = _httpContextAccessor.HttpContext?.User;
-
-        if (user is null)
+        if (!UserContextHelper.TryGetUserId(_httpContextAccessor, out var userId, out var errorResponse))
         {
-            return BaseResponse.Fail(
-                "Unauthorized",
-                new List<string> { "User context is missing." },
-                ErrorType.Unauthorized);
-        }
-
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return BaseResponse.Fail(
-                "Unauthorized",
-                new List<string> { "User ID not found in token." },
-                ErrorType.Unauthorized);
+            return errorResponse!;
         }
 
         var cart = await _cartRepository.GetByUserIdWithItemsAsync(userId, ct);
