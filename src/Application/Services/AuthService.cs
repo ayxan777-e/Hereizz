@@ -21,15 +21,17 @@ public class AuthService : IAuthService
     private readonly IApplicationDbContext _context;
     private readonly IEmailService _emailService;
     private readonly EmailOptions _emailOptions;
+    private readonly IEmailTemplateService _emailTemplateService;
 
     public AuthService(
-        UserManager<User> userManager,
-        SignInManager<User> signInManager,
-        IJwtTokenService jwtTokenService,
-        ILogger<AuthService> logger,
-        IApplicationDbContext context,
-        IEmailService emailService,
-        IOptions<EmailOptions> emailOptions)
+         UserManager<User> userManager,
+         SignInManager<User> signInManager,
+         IJwtTokenService jwtTokenService,
+         ILogger<AuthService> logger,
+         IApplicationDbContext context,
+         IEmailService emailService,
+         IOptions<EmailOptions> emailOptions,
+         IEmailTemplateService emailTemplateService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -38,6 +40,7 @@ public class AuthService : IAuthService
         _context = context;
         _emailService = emailService;
         _emailOptions = emailOptions.Value;
+        _emailTemplateService = emailTemplateService;
     }
 
     public async Task<BaseResponse<AuthResponse>> LoginAsync(string emailOrUserName, string password, CancellationToken ct)
@@ -366,7 +369,8 @@ public class AuthService : IAuthService
         var encodedToken = WebUtility.UrlEncode(token);
         var confirmationLink = $"{_emailOptions.ConfirmationBaseUrl}?userId={user.Id}&token={encodedToken}";
 
-        var body = $"Please confirm your email by clicking this link: <a href=\"{confirmationLink}\">Confirm Email</a>";
+        var body = _emailTemplateService.BuildConfirmEmailTemplate(confirmationLink);
+
         await _emailService.SendEmailAsync(user.Email!, "Confirm your email", body, ct);
     }
 }
