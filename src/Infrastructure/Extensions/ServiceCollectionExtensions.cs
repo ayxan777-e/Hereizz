@@ -103,6 +103,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IApplicationDbContext, HereizzzDbContext>();
         services.AddScoped<IRefreshTokenCleanupService, RefreshTokenCleanupService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         services.AddHttpContextAccessor();
 

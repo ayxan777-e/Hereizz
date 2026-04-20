@@ -19,7 +19,7 @@ public class HereizzzDbContext : IdentityDbContext<User>, IApplicationDbContext
     public DbSet<Cart> Carts { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
-
+    public DbSet<Notification> Notifications { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

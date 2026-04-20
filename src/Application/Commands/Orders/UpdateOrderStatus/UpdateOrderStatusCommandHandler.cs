@@ -11,13 +11,16 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
 
     public UpdateOrderStatusCommandHandler(
         IOrderRepository orderRepository,
-        IEmailService emailService)
+        IEmailService emailService,
+        INotificationService notificationService)
     {
         _orderRepository = orderRepository;
         _emailService = emailService;
+        _notificationService = notificationService;
     }
 
     public async Task<BaseResponse<bool>> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
@@ -118,6 +121,13 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
                 """;
 
             await _emailService.SendEmailAsync(order.User.Email, subject, body, cancellationToken);
+
+            await _notificationService.CreateAsync(
+                order.UserId,
+                subject,
+                $"Status updated for {productsText}: {order.Status}",
+                Domain.Enums.NotificationType.OrderStatusUpdated,
+                cancellationToken);
         }
 
         return BaseResponse<bool>.Ok(true, "Order status updated");
