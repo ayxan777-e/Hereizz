@@ -12,15 +12,18 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
     private readonly IOrderRepository _orderRepository;
     private readonly IEmailService _emailService;
     private readonly INotificationService _notificationService;
+    private readonly IEmailTemplateService _emailTemplateService;
 
     public UpdateOrderStatusCommandHandler(
         IOrderRepository orderRepository,
         IEmailService emailService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IEmailTemplateService emailTemplateService)
     {
         _orderRepository = orderRepository;
         _emailService = emailService;
         _notificationService = notificationService;
+        _emailTemplateService = emailTemplateService;
     }
 
     public async Task<BaseResponse<bool>> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
@@ -61,72 +64,19 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
                 ? string.Join(", ", productNames)
                 : "your selected products";
 
-            string subject;
-            string content;
+            var emailTemplate = _emailTemplateService.BuildOrderStatusUpdatedTemplate(productsText, order.Status);
 
-            switch (order.Status)
-            {
-                case OrderStatus.Confirmed:
-                    subject = "Your order has been confirmed";
-                    content = $"Your order for <b>{productsText}</b> has been successfully confirmed.";
-                    break;
-
-                case OrderStatus.Processing:
-                    subject = "Your order is being processed";
-                    content = $"We are currently preparing your order for <b>{productsText}</b>.";
-                    break;
-
-                case OrderStatus.Shipped:
-                    subject = "Your order is on the way";
-                    content = $"Your order for <b>{productsText}</b> has been shipped and is on the way.";
-                    break;
-
-                case OrderStatus.Delivered:
-                    subject = "Your order has been delivered";
-                    content = $"Your order for <b>{productsText}</b> has been delivered successfully.";
-                    break;
-
-                case OrderStatus.Cancelled:
-                    subject = "Your order has been cancelled";
-                    content = $"Your order for <b>{productsText}</b> has been cancelled.";
-                    break;
-
-                default:
-                    subject = "Order status updated";
-                    content = $"Your order status for <b>{productsText}</b> has been updated to <b>{order.Status}</b>.";
-                    break;
-            }
-
-            var body = $"""
-                <div style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #2c3e50;">Hereizzz</h2>
-                    
-                    <h3 style="color: #34495e;">{subject}</h3>
-                    
-                    <p style="font-size: 15px;">
-                        {content}
-                    </p>
-
-                    <hr style="margin:20px 0;" />
-
-                    <p style="font-size: 13px; color: gray;">
-                        If you have any questions, feel free to contact us.
-                    </p>
-
-                    <p style="font-size: 13px; color: gray;">
-                        Best regards,<br/>
-                        <b>Hereizzz Team</b>
-                    </p>
-                </div>
-                """;
-
-            await _emailService.SendEmailAsync(order.User.Email, subject, body, cancellationToken);
+            await _emailService.SendEmailAsync(
+                order.User.Email,
+                emailTemplate.Subject,
+                emailTemplate.Body,
+                cancellationToken);
 
             await _notificationService.CreateAsync(
                 order.UserId,
-                subject,
+                emailTemplate.Subject,
                 $"Status updated for {productsText}: {order.Status}",
-                Domain.Enums.NotificationType.OrderStatusUpdated,
+                NotificationType.OrderStatusUpdated,
                 cancellationToken);
         }
 

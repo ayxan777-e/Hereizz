@@ -16,6 +16,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
     private readonly INotificationService _notificationService;
     private readonly IEmailService _emailService;
     private readonly UserManager<User> _userManager;
+    private readonly IEmailTemplateService _emailTemplateService;
 
     public CheckoutCommandHandler(
         ICartRepository cartRepository,
@@ -23,7 +24,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
         ICurrentUserService currentUserService,
         INotificationService notificationService,
         IEmailService emailService,
-        UserManager<User> userManager)
+        UserManager<User> userManager,
+        IEmailTemplateService emailTemplateService)
     {
         _cartRepository = cartRepository;
         _orderRepository = orderRepository;
@@ -31,6 +33,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
         _notificationService = notificationService;
         _emailService = emailService;
         _userManager = userManager;
+        _emailTemplateService = emailTemplateService;
     }
 
     public async Task<BaseResponse<int>> Handle(CheckoutCommand request, CancellationToken ct)
@@ -114,33 +117,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
         if (!string.IsNullOrWhiteSpace(user?.Email))
         {
             var subject = "Your order has been created";
-
-            var body = $"""
-                <div style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #2c3e50;">Hereizzz</h2>
-
-                    <h3 style="color: #34495e;">Your order has been created</h3>
-
-                    <p style="font-size: 15px;">
-                        Your order for <b>{productsText}</b> has been created successfully.
-                    </p>
-
-                    <p style="font-size: 15px;">
-                        Current Status: <b>{order.Status}</b>
-                    </p>
-
-                    <hr style="margin:20px 0;" />
-
-                    <p style="font-size: 13px; color: gray;">
-                        We will keep you updated about the next steps.
-                    </p>
-
-                    <p style="font-size: 13px; color: gray;">
-                        Best regards,<br/>
-                        <b>Hereizzz Team</b>
-                    </p>
-                </div>
-                """;
+            var body = _emailTemplateService.BuildOrderCreatedTemplate(productsText, order.Status);
 
             await _emailService.SendEmailAsync(user.Email, subject, body, ct);
         }
