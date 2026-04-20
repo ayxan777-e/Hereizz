@@ -35,4 +35,12 @@ public class OrderRepository : GenericRepository<Order, int>, IOrderRepository
             .Include(x => x.Items)
             .AsQueryable();
     }
+
+    public async Task<Order?> GetByIdWithUserAsync(int id, CancellationToken ct)
+    {
+        return await _context.Orders
+            .Include(x => x.User)
+            .Include(x => x.Items)
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+    }
 }
