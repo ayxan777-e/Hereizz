@@ -65,6 +65,22 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
                 new List<string> { "Cart is empty." },
                 ErrorType.BadRequest);
         }
+        var inactiveProducts = cart.Items
+                   .Where(x => x.Product is null || !x.Product.IsActive)
+                   .Select(x => x.Product != null ? x.Product.Title : $"ProductId: {x.ProductId}")
+                   .Distinct()
+                   .ToList();
+
+        if (inactiveProducts.Any())
+        {
+            return BaseResponse<int>.Fail(
+                "Checkout failed",
+                new List<string>
+                {
+            $"Some products in your cart are no longer available: {string.Join(", ", inactiveProducts)}"
+                },
+                ErrorType.BadRequest);
+        }
 
         var order = new Order
         {
@@ -90,10 +106,19 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
         };
 
         order.TotalPrice = order.Items.Sum(x => x.FinalPrice * x.Quantity);
+        order.Payment = new Payment
+        {
+            UserId = userId,
+            Amount = order.TotalPrice,
+            Method = PaymentMethod.Card,
+            Status = PaymentStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
 
         await _orderRepository.AddAsync(order, ct);
         await _cartRepository.ClearCartAsync(cart.Id, ct);
         await _orderRepository.SaveChangesAsync(ct);
+
 
         var productNames = order.Items
             .Select(x => x.ProductTitle)
