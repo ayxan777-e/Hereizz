@@ -19,4 +19,9 @@ public class PaymentRepository : GenericRepository<Payment, int>, IPaymentReposi
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(ct);
     }
+
+    public IQueryable<Payment> GetQueryable()
+    {
+        return _context.Payments.AsQueryable();
+    }
 }

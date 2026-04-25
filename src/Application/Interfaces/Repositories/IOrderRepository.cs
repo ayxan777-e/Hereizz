@@ -8,4 +8,5 @@ public interface IOrderRepository : IGenericRepository<Order, int>
     Task<Order?> GetByIdWithDetailsAsync(int id, CancellationToken ct);
     IQueryable<Order> GetQueryableWithDetails();
     Task<Order?> GetByIdWithUserAsync(int id, CancellationToken ct);
+    IQueryable<Order> GetQueryable();
 }
