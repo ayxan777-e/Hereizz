@@ -43,4 +43,8 @@ public class OrderRepository : GenericRepository<Order, int>, IOrderRepository
             .Include(x => x.Items)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
+    public IQueryable<Order> GetQueryable()
+    {
+        return _context.Orders.AsQueryable();
+    }
 }

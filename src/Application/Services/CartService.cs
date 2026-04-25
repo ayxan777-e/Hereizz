@@ -37,20 +37,30 @@ public class CartService : ICartService
             shippingOptionId,
             quantity);
 
-        var product = await _productRepository.GetByIdAsync(productId, ct);
+        var product = await _productRepository.GetActiveByIdAsync(productId, ct);
+
         if (product is null)
         {
-            _logger.LogWarning("Add to cart failed. Product not found. UserId={UserId}, ProductId={ProductId}", userId, productId);
+            _logger.LogWarning(
+                "Add to cart failed. Product not found or inactive. UserId={UserId}, ProductId={ProductId}",
+                userId,
+                productId);
+
             return BaseResponse.Fail(
-                "Product not found",
-                new List<string> { "The selected product does not exist." },
-                ErrorType.NotFound);
+                "Product not found or inactive",
+                new List<string> { "The selected product does not exist or is not available." },
+                ErrorType.BadRequest);
         }
 
         var shippingOption = await _shippingOptionRepository.GetByIdAsync(shippingOptionId, ct);
+
         if (shippingOption is null)
         {
-            _logger.LogWarning("Add to cart failed. Shipping option not found. UserId={UserId}, ShippingOptionId={ShippingOptionId}", userId, shippingOptionId);
+            _logger.LogWarning(
+                "Add to cart failed. Shipping option not found. UserId={UserId}, ShippingOptionId={ShippingOptionId}",
+                userId,
+                shippingOptionId);
+
             return BaseResponse.Fail(
                 "Shipping option not found",
                 new List<string> { "The selected shipping option does not exist." },
@@ -67,6 +77,7 @@ public class CartService : ICartService
                 userId,
                 productId,
                 shippingOptionId);
+
             return BaseResponse.Fail(
                 "Calculation failed",
                 new List<string> { "Could not calculate the selected shipping option." },
@@ -78,16 +89,21 @@ public class CartService : ICartService
         if (cart is null)
         {
             cart = new Cart { UserId = userId };
+
             await _cartRepository.AddAsync(cart, ct);
             await _cartRepository.SaveChangesAsync(ct);
 
             _logger.LogInformation("Cart created for UserId={UserId}, CartId={CartId}", userId, cart.Id);
         }
 
-        var existingItem = cart.Items.FirstOrDefault(x => x.ProductId == productId && x.ShippingOptionId == shippingOptionId);
+        var existingItem = cart.Items.FirstOrDefault(x =>
+            x.ProductId == productId &&
+            x.ShippingOptionId == shippingOptionId);
+
         if (existingItem is not null)
         {
             existingItem.Quantity += quantity;
+
             _logger.LogInformation(
                 "Cart item quantity increased. UserId={UserId}, CartItemId={CartItemId}, NewQuantity={NewQuantity}",
                 userId,
@@ -132,9 +148,11 @@ public class CartService : ICartService
         _logger.LogInformation("Remove cart item requested. UserId={UserId}, ItemId={ItemId}", userId, itemId);
 
         var cart = await _cartRepository.GetByUserIdWithItemsAsync(userId, ct);
+
         if (cart is null)
         {
             _logger.LogWarning("Remove cart item failed. Cart not found. UserId={UserId}", userId);
+
             return BaseResponse.Fail(
                 "Cart not found",
                 new List<string> { "Cart was not found for this user." },
@@ -142,9 +160,14 @@ public class CartService : ICartService
         }
 
         var cartItem = cart.Items.FirstOrDefault(x => x.Id == itemId);
+
         if (cartItem is null)
         {
-            _logger.LogWarning("Remove cart item failed. Item not found. UserId={UserId}, ItemId={ItemId}", userId, itemId);
+            _logger.LogWarning(
+                "Remove cart item failed. Item not found. UserId={UserId}, ItemId={ItemId}",
+                userId,
+                itemId);
+
             return BaseResponse.Fail(
                 "Cart item not found",
                 new List<string> { "The requested cart item does not exist in your cart." },

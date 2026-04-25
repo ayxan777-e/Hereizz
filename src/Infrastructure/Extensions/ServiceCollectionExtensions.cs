@@ -106,6 +106,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
 
         services.AddHttpContextAccessor();
 

@@ -13,4 +13,6 @@ public class Order : BaseEntity<int>
     public decimal TotalPrice { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+
+    public Payment? Payment { get; set; }
 }
