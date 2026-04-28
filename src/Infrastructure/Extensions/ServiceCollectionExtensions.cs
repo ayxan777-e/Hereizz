@@ -111,6 +111,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailTemplateService, EmailTemplateService>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<ICurrencyService, CurrencyService>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<INotificationRealtimeService, SignalRNotificationRealtimeService>();
 

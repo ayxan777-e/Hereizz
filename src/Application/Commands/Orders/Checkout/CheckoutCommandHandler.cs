@@ -17,6 +17,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
     private readonly IEmailService _emailService;
     private readonly UserManager<User> _userManager;
     private readonly IEmailTemplateService _emailTemplateService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public CheckoutCommandHandler(
         ICartRepository cartRepository,
@@ -25,7 +26,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
         INotificationService notificationService,
         IEmailService emailService,
         UserManager<User> userManager,
-        IEmailTemplateService emailTemplateService)
+        IEmailTemplateService emailTemplateService,
+        IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
         _orderRepository = orderRepository;
@@ -34,6 +36,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
         _emailService = emailService;
         _userManager = userManager;
         _emailTemplateService = emailTemplateService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<BaseResponse<int>> Handle(CheckoutCommand request, CancellationToken ct)
@@ -115,10 +118,22 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, BaseRespo
             CreatedAt = DateTime.UtcNow
         };
 
-        await _orderRepository.AddAsync(order, ct);
-        await _cartRepository.ClearCartAsync(cart.Id, ct);
-        await _orderRepository.SaveChangesAsync(ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
 
+        try
+        {
+            await _orderRepository.AddAsync(order, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            await _cartRepository.ClearCartAsync(cart.Id, ct);
+
+            await _unitOfWork.CommitTransactionAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
 
         var productNames = order.Items
             .Select(x => x.ProductTitle)
