@@ -14,18 +14,23 @@ public class PriceCalculatorService : IPriceCalculatorService
     private readonly IProductRepository _productRepository;
     private readonly IShippingOptionRepository _shippingRepository;
     private readonly IFeeCalculator _feeCalculator;
+    private readonly ICurrencyService _currencyService;
 
     public PriceCalculatorService(
         IProductRepository productRepository,
         IShippingOptionRepository shippingRepository,
-        IFeeCalculator feeCalculator)
+        IFeeCalculator feeCalculator,
+        ICurrencyService currencyService)
     {
         _productRepository = productRepository;
         _shippingRepository = shippingRepository;
         _feeCalculator = feeCalculator;
+        _currencyService = currencyService;
     }
 
-    public async Task<List<PriceCalculationResponse>> CalculateAsync(int productId, CancellationToken ct)
+    public async Task<List<PriceCalculationResponse>> CalculateAsync(
+        int productId,
+        CancellationToken ct)
     {
         var product = await _productRepository.GetByIdAsync(productId, ct)
             ?? throw new KeyNotFoundException("Product not found");
@@ -39,7 +44,9 @@ public class PriceCalculatorService : IPriceCalculatorService
             .ToList();
     }
 
-    public Task<PriceCalculationResponse?> CalculateForOptionAsync(Product product, ShippingOption shippingOption)
+    public Task<PriceCalculationResponse?> CalculateForOptionAsync(
+        Product product,
+        ShippingOption shippingOption)
     {
         if (!IsEligibleForCalculation(product, shippingOption))
             return Task.FromResult<PriceCalculationResponse?>(null);
@@ -60,10 +67,18 @@ public class PriceCalculatorService : IPriceCalculatorService
 
     private PriceCalculationResponse BuildPriceResponse(Product product, ShippingOption option)
     {
+        var productPriceAzn = _currencyService.ConvertToAzn(
+            product.Price,
+            product.Currency.ToString());
+
         var shippingCost = CalculateShippingCost(product, option);
 
         var fees = _feeCalculator.CalculateFees(product, option);
         var totalFees = fees.Sum(x => x.Amount);
+
+        var customsFee = GetFeeAmount(fees, CustomsFeeName);
+        var warehouseFee = GetFeeAmount(fees, WarehouseFeeName);
+        var localDeliveryFee = GetFeeAmount(fees, LocalDeliveryFeeName);
 
         return new PriceCalculationResponse
         {
@@ -73,14 +88,14 @@ public class PriceCalculatorService : IPriceCalculatorService
             ShippingOptionId = option.Id,
             ShippingOptionName = option.Name,
 
-            ProductPrice = product.Price,
+            ProductPrice = productPriceAzn,
             ShippingCost = shippingCost,
 
-            CustomsFee = GetFeeAmount(fees, CustomsFeeName),
-            WarehouseFee = GetFeeAmount(fees, WarehouseFeeName),
-            LocalDeliveryFee = GetFeeAmount(fees, LocalDeliveryFeeName),
+            CustomsFee = customsFee,
+            WarehouseFee = warehouseFee,
+            LocalDeliveryFee = localDeliveryFee,
 
-            FinalPrice = product.Price + shippingCost + totalFees,
+            FinalPrice = productPriceAzn + shippingCost + totalFees,
 
             TransportType = option.TransportType,
             EstimatedMinDays = option.EstimatedMinDays,

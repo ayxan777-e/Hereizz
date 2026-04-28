@@ -4,6 +4,7 @@ using Application.Mappings;
 using Infrastructure.Extensions;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Persistence.Seed;
+using Infrastructure.Realtime;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -91,6 +92,8 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 using (var scope = app.Services.CreateScope())
 {

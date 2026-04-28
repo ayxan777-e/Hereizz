@@ -1,5 +1,6 @@
 ﻿using Application.Abstracts.Services;
 using Application.Behaviors;
+using Application.Interfaces.Realtime;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Application.Options;
@@ -10,6 +11,7 @@ using Application.Validators.Orders;
 using Domain.Entities;
 using FluentValidation;
 using Infrastructure.Persistence.Context;
+using Infrastructure.Realtime;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
 using MediatR;
@@ -76,6 +78,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 
+        services.AddSignalR();
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(GetBestRoutesQueryHandler).Assembly);
@@ -107,6 +110,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IEmailTemplateService, EmailTemplateService>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<ICurrencyService, CurrencyService>();
+
+        services.AddScoped<INotificationRealtimeService, SignalRNotificationRealtimeService>();
 
         services.AddHttpContextAccessor();
 
