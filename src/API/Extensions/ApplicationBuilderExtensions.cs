@@ -1,4 +1,5 @@
 ﻿using API.Middlewares;
+using Application.Abstracts.Services;
 using Application.Interfaces.Services;
 using Infrastructure.Persistence.Context;
 using Infrastructure.Persistence.Seed;
@@ -44,9 +45,12 @@ public static class ApplicationBuilderExtensions
 
         var context = scope.ServiceProvider.GetRequiredService<HereizzzDbContext>();
         var refreshTokenCleanupService = scope.ServiceProvider.GetRequiredService<IRefreshTokenCleanupService>();
+        var provider = scope.ServiceProvider.GetRequiredService<IProductProviderService>();
+
 
         await context.Database.MigrateAsync();
 
+        await ProductSeeder.SeedAsync(context, provider);
         await IdentitySeeder.SeedAsync(scope.ServiceProvider);
         await ShippingOptionSeeder.SeedAsync(context);
         await refreshTokenCleanupService.CleanupAsync(CancellationToken.None);

@@ -1,6 +1,7 @@
 ﻿using Application.DTOs.Calculation;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Application.Shared.Responses;
 using Domain.Entities;
 
 namespace Application.Services;
@@ -32,8 +33,12 @@ public class PriceCalculatorService : IPriceCalculatorService
         int productId,
         CancellationToken ct)
     {
-        var product = await _productRepository.GetByIdAsync(productId, ct)
-            ?? throw new KeyNotFoundException("Product not found");
+        var product = await _productRepository.GetByIdAsync(productId, ct);
+
+        if (product is null)
+        {
+            return new List<PriceCalculationResponse>();
+        }
 
         var shippingOptions = await _shippingRepository
             .GetByOriginCountryAsync(product.OriginCountry, ct);
