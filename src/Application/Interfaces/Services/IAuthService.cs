@@ -11,4 +11,5 @@ public interface IAuthService
     Task<BaseResponse> LogoutAsync(string refreshToken, CancellationToken ct);
     Task<BaseResponse> ConfirmEmailAsync(string userId, string token, CancellationToken ct);
     Task<BaseResponse> ResendConfirmationEmailAsync(string email, CancellationToken ct);
+    Task<bool> IsEmailConfirmedAsync(string email, CancellationToken cancellationToken);
 }
