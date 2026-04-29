@@ -28,26 +28,26 @@ public static class ServiceCollectionExtensions
             {
                 Name = "Authorization",
                 Type = SecuritySchemeType.Http,
-                Scheme = SecuritySchemeType.Http.ToString().ToLower(),
+                Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
                 Description = "JWT token daxil et. Example: Bearer {token}"
             });
 
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
             {
+                Reference = new OpenApiReference
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
-            });
+            },
+            Array.Empty<string>()
+        }
+    });
         });
 
         services.AddCors(options =>

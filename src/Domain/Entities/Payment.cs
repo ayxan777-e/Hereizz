@@ -5,7 +5,7 @@ namespace Domain.Entities;
 
 public class Payment : BaseEntity<int>
 {
-    public int OrderId { get; set; }
+    public int? OrderId { get; set; }
     public Order Order { get; set; } = null!;
 
     public string UserId { get; set; } = null!;

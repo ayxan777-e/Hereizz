@@ -13,12 +13,8 @@ public static class ProductSeeder
         IProductProviderService provider)
     {
         var existingProducts = await context.Products.ToListAsync();
-
-        if (existingProducts.Any())
-        {
-            context.Products.RemoveRange(existingProducts);
-            await context.SaveChangesAsync();
-        }
+        if (await context.Products.AnyAsync())
+            return;
 
         var externalIds = new[]
         {

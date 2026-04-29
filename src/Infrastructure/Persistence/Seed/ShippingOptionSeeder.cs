@@ -9,7 +9,6 @@ public static class ShippingOptionSeeder
 {
     public static async Task SeedAsync(HereizzzDbContext context)
     {
-        Console.WriteLine("ShippingOptionSeeder started");
 
         if (await context.ShippingOptions.AnyAsync())
             return;
