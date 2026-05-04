@@ -13,17 +13,20 @@ public class PayCommandHandler : IRequestHandler<PayCommand, BaseResponse<int>>
     private readonly IOrderRepository _orderRepository;
     private readonly ICartRepository _cartRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationService _notificationService;
 
     public PayCommandHandler(
         IPaymentRepository paymentRepository,
         IOrderRepository orderRepository,
         ICartRepository cartRepository,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        INotificationService notificationService)
     {
         _paymentRepository = paymentRepository;
         _orderRepository = orderRepository;
         _cartRepository = cartRepository;
         _currentUserService = currentUserService;
+        _notificationService = notificationService;
     }
 
     public async Task<BaseResponse<int>> Handle(PayCommand request, CancellationToken ct)
@@ -77,6 +80,13 @@ public class PayCommandHandler : IRequestHandler<PayCommand, BaseResponse<int>>
         {
             await _cartRepository.ClearCartAsync(cart.Id, ct);
         }
+
+        await _notificationService.CreateAsync(
+            payment.UserId,
+            "Order created",
+            "Your order has been created successfully.",
+            NotificationType.OrderCreated,
+            ct);
 
         await _paymentRepository.SaveChangesAsync(ct);
 
