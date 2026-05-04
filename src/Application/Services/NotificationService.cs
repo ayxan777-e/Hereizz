@@ -1,5 +1,6 @@
 ﻿using Application.DTOs.Notifications;
 using Application.Interfaces.Repositories;
+using Application.Interfaces.Realtime;
 using Application.Interfaces.Services;
 using Application.Shared.Responses;
 using Domain.Entities;
@@ -11,16 +12,19 @@ public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationRealtimeService _realtimeService;
 
     public NotificationService(
         INotificationRepository notificationRepository,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        INotificationRealtimeService realtimeService)
     {
         _notificationRepository = notificationRepository;
         _currentUserService = currentUserService;
+        _realtimeService = realtimeService;
     }
 
-    public async Task CreateAsync(string userId, string title, string message, NotificationType type, CancellationToken ct = default)
+    public async Task CreateAsync(string userId,  string title, string message, NotificationType type,CancellationToken ct = default)
     {
         var notification = new Notification
         {
@@ -33,6 +37,12 @@ public class NotificationService : INotificationService
 
         await _notificationRepository.AddAsync(notification, ct);
         await _notificationRepository.SaveChangesAsync(ct);
+
+        await _realtimeService.SendNotificationAsync(
+            userId,
+            title,
+            message,
+            ct);
     }
 
     public async Task<BaseResponse<List<NotificationResponse>>> GetMyNotificationsAsync(CancellationToken ct)
@@ -45,7 +55,9 @@ public class NotificationService : INotificationService
                 ErrorType.Unauthorized);
         }
 
-        var notifications = await _notificationRepository.GetByUserIdAsync(_currentUserService.UserId, ct);
+        var notifications = await _notificationRepository.GetByUserIdAsync(
+            _currentUserService.UserId,
+            ct);
 
         var response = notifications.Select(x => new NotificationResponse
         {
@@ -57,7 +69,9 @@ public class NotificationService : INotificationService
             CreatedAt = x.CreatedAt
         }).ToList();
 
-        return BaseResponse<List<NotificationResponse>>.Ok(response, "Notifications fetched successfully");
+        return BaseResponse<List<NotificationResponse>>.Ok(
+            response,
+            "Notifications fetched successfully");
     }
 
     public async Task<BaseResponse<int>> GetUnreadCountAsync(CancellationToken ct)
@@ -70,9 +84,13 @@ public class NotificationService : INotificationService
                 ErrorType.Unauthorized);
         }
 
-        var count = await _notificationRepository.GetUnreadCountAsync(_currentUserService.UserId, ct);
+        var count = await _notificationRepository.GetUnreadCountAsync(
+            _currentUserService.UserId,
+            ct);
 
-        return BaseResponse<int>.Ok(count, "Unread notification count fetched successfully");
+        return BaseResponse<int>.Ok(
+            count,
+            "Unread notification count fetched successfully");
     }
 
     public async Task<BaseResponse> MarkAsReadAsync(int notificationId, CancellationToken ct)
@@ -85,7 +103,10 @@ public class NotificationService : INotificationService
                 ErrorType.Unauthorized);
         }
 
-        var notification = await _notificationRepository.GetByIdAndUserIdAsync(notificationId, _currentUserService.UserId, ct);
+        var notification = await _notificationRepository.GetByIdAndUserIdAsync(
+            notificationId,
+            _currentUserService.UserId,
+            ct);
 
         if (notification is null)
         {
@@ -115,7 +136,10 @@ public class NotificationService : INotificationService
                 ErrorType.Unauthorized);
         }
 
-        await _notificationRepository.MarkAllAsReadAsync(_currentUserService.UserId, ct);
+        await _notificationRepository.MarkAllAsReadAsync(
+            _currentUserService.UserId,
+            ct);
+
         await _notificationRepository.SaveChangesAsync(ct);
 
         return BaseResponse.Ok("All notifications marked as read");

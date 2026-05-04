@@ -30,6 +30,7 @@ public class UpdateShippingOptionCommandValidator : AbstractValidator<UpdateShip
             .IsInEnum();
 
         RuleFor(x => x.Request.DestinationCountry)
+
             .IsInEnum();
 
         RuleFor(x => x.Request.TransportType)

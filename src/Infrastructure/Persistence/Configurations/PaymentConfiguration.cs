@@ -19,10 +19,11 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(x => x.FailureReason)
                .HasMaxLength(500);
 
-        builder.HasOne(x => x.Order)
-               .WithOne(o => o.Payment)
-               .HasForeignKey<Payment>(x => x.OrderId)
-               .OnDelete(DeleteBehavior.Cascade);
+        builder
+            .HasOne(p => p.Order)
+            .WithOne(o => o.Payment)
+            .HasForeignKey<Payment>(p => p.OrderId)
+             .IsRequired(false); 
 
         builder.HasOne(x => x.User)
                .WithMany()

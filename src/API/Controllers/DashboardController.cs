@@ -1,5 +1,6 @@
 ﻿using API.Controllers.Common;
 using Application.Queries.Dashboard.GetAdminDashboard;
+using Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ public class DashboardController : BaseApiController
     }
 
     [HttpGet("admin")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> GetAdminDashboard([FromQuery] int? year)
     {
         var result = await _mediator.Send(new GetAdminDashboardQuery

@@ -1,59 +1,95 @@
-﻿using Application.Interfaces.Repositories;
+﻿using Application.Commands.Payments.Pay;
+using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Application.Shared.Responses;
+using Domain.Entities;
 using Domain.Enums;
 using MediatR;
+using System.Text.Json;
 
-namespace Application.Commands.Payments.Pay;
-
-public class PayCommandHandler : IRequestHandler<PayCommand, BaseResponse>
+public class PayCommandHandler : IRequestHandler<PayCommand, BaseResponse<int>>
 {
     private readonly IPaymentRepository _paymentRepository;
+    private readonly IOrderRepository _orderRepository;
+    private readonly ICartRepository _cartRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationService _notificationService;
 
     public PayCommandHandler(
         IPaymentRepository paymentRepository,
-        ICurrentUserService currentUserService)
+        IOrderRepository orderRepository,
+        ICartRepository cartRepository,
+        ICurrentUserService currentUserService,
+        INotificationService notificationService)
     {
         _paymentRepository = paymentRepository;
+        _orderRepository = orderRepository;
+        _cartRepository = cartRepository;
         _currentUserService = currentUserService;
+        _notificationService = notificationService;
     }
 
-    public async Task<BaseResponse> Handle(PayCommand request, CancellationToken ct)
+    public async Task<BaseResponse<int>> Handle(PayCommand request, CancellationToken ct)
     {
         var payment = await _paymentRepository.GetByIdAsync(request.PaymentId, ct);
 
         if (payment is null)
-        {
-            return BaseResponse.Fail(
-                "Payment not found",
-                new List<string> { "Payment not found." },
-                ErrorType.NotFound);
-        }
+            return BaseResponse<int>.Fail("Payment not found", new(), ErrorType.NotFound);
 
         if (payment.UserId != _currentUserService.UserId)
-        {
-            return BaseResponse.Fail(
-                "Forbidden",
-                new List<string> { "You are not allowed to pay this payment." },
-                ErrorType.Forbidden);
-        }
+            return BaseResponse<int>.Fail("Forbidden", new(), ErrorType.Forbidden);
 
         if (payment.Status == PaymentStatus.Paid)
+            return BaseResponse<int>.Fail("Already paid", new(), ErrorType.BadRequest);
+
+        var items = JsonSerializer.Deserialize<List<TempOrderItem>>(payment.OrderData);
+
+        var order = new Order
         {
-            return BaseResponse.Fail(
-                "Payment already completed",
-                new List<string> { "This payment has already been paid." },
-                ErrorType.BadRequest);
-        }
+            UserId = payment.UserId,
+            Status = OrderStatus.Confirmed,
+            Items = items.Select(x => new OrderItem
+            {
+                ProductId = x.ProductId,
+                ProductTitle = x.Title,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                ShippingOptionId = x.ShippingOptionId,
+                ShippingOptionName = x.ShippingOptionName,
+                ShippingCost = x.ShippingCost,
+                CustomsFee = x.CustomsFee,
+                WarehouseFee = x.WarehouseFee,
+                LocalDeliveryFee = x.LocalDeliveryFee,
+                FinalPrice = x.FinalPrice,
+                TransportType = x.TransportType,
+                EstimatedMinDays = x.EstimatedMinDays,
+                EstimatedMaxDays = x.EstimatedMaxDays
+            }).ToList()
+        };
+
+        order.TotalPrice = order.Items.Sum(x => x.FinalPrice * x.Quantity);
+
+        await _orderRepository.AddAsync(order, ct);
 
         payment.Status = PaymentStatus.Paid;
         payment.PaidAt = DateTime.UtcNow;
         payment.TransactionId = Guid.NewGuid().ToString();
 
-        _paymentRepository.Update(payment);
+        var cart = await _cartRepository.GetByUserIdWithItemsAsync(payment.UserId, ct);
+        if (cart != null)
+        {
+            await _cartRepository.ClearCartAsync(cart.Id, ct);
+        }
+
+        await _notificationService.CreateAsync(
+            payment.UserId,
+            "Order created",
+            "Your order has been created successfully.",
+            NotificationType.OrderCreated,
+            ct);
+
         await _paymentRepository.SaveChangesAsync(ct);
 
-        return BaseResponse.Ok("Payment successful");
+        return BaseResponse<int>.Ok(order.Id, "Order created");
     }
 }

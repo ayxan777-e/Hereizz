@@ -373,4 +373,13 @@ public class AuthService : IAuthService
 
         await _emailService.SendEmailAsync(user.Email!, "Confirm your email", body, ct);
     }
+    public async Task<bool> IsEmailConfirmedAsync(string email, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user == null)
+            return false;
+
+        return user.EmailConfirmed;
+    }
 }

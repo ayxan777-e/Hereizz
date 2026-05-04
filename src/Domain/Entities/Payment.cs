@@ -5,13 +5,14 @@ namespace Domain.Entities;
 
 public class Payment : BaseEntity<int>
 {
-    public int OrderId { get; set; }
+    public int? OrderId { get; set; }
     public Order Order { get; set; } = null!;
 
     public string UserId { get; set; } = null!;
     public User User { get; set; } = null!;
 
     public decimal Amount { get; set; }
+    public string OrderData { get; set; } = string.Empty;
 
     public PaymentMethod Method { get; set; } = PaymentMethod.Card;
 

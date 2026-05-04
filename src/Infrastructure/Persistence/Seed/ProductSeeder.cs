@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.Abstracts.Services;
+using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
@@ -7,70 +8,49 @@ namespace Infrastructure.Persistence.Seed;
 
 public static class ProductSeeder
 {
-    public static async Task SeedAsync(HereizzzDbContext context)
+    public static async Task SeedAsync(
+        HereizzzDbContext context,
+        IProductProviderService provider)
     {
+        var existingProducts = await context.Products.ToListAsync();
         if (await context.Products.AnyAsync())
             return;
 
-        var products = new List<Product>
+        var externalIds = new[]
         {
-            new Product
-            {
-                Title = "Apple Watch Series 9",
-                Description = "Latest Apple smartwatch",
-                Price = 399,
-                Currency = Currency.USD,
-                Marketplace = Marketplace.Amazon,
-                OriginCountry = Country.USA,
-                WeightKg = 0.4m,
-                Category = "Smart Watch",
-                ImageUrl = "",
-                AffiliateUrl = "https://amazon.com/apple-watch",
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                Title = "Nike Air Max 270",
-                Description = "Popular Nike sneakers",
-                Price = 150,
-                Currency = Currency.USD,
-                Marketplace = Marketplace.Ebay,
-                OriginCountry = Country.USA,
-                WeightKg = 1.1m,
-                Category = "Shoes",
-                ImageUrl = "",
-                AffiliateUrl = "https://ebay.com/nike-air-max",
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                Title = "Casio G-Shock",
-                Description = "Durable digital watch",
-                Price = 120,
-                Currency = Currency.USD,
-                Marketplace = Marketplace.Trendyol,
-                OriginCountry = Country.Turkey,
-                WeightKg = 0.3m,
-                Category = "Watch",
-                ImageUrl = "",
-                AffiliateUrl = "https://trendyol.com/casio-gshock",
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                Title = "Gaming Chair Pro X",
-                Description = "Large ergonomic gaming chair",
-                Price = 220,
-                Currency = Currency.USD,
-                Marketplace = Marketplace.Amazon,
-                OriginCountry = Country.USA,
-                WeightKg = 8m,
-                Category = "Furniture",
-                ImageUrl = "",
-                AffiliateUrl = "https://amazon.com/gaming-chair",
-                CreatedAt = DateTime.UtcNow
-            }
+            "iphone15",
+            "samsung-s24",
+            "sony-headphones",
+            "ps5",
+            "macbook",
+            "nike-airforce",
+            "robot-vacuum",
+            "kindle"
         };
+
+        var products = new List<Product>();
+
+        foreach (var id in externalIds)
+        {
+            var data = await provider.GetProductAsync(Marketplace.Amazon, id);
+
+            products.Add(new Product
+            {
+                ExternalProductId = id,
+                Title = data.Title,
+                Description = data.Description,
+                Price = data.Price,
+                Currency = data.Currency,
+                Marketplace = Marketplace.Amazon,
+                OriginCountry = data.OriginCountry,
+                WeightKg = data.WeightKg,
+                Category = data.Category,
+                ImageUrl = data.ImageUrl,
+                AffiliateUrl = data.AffiliateUrl,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
 
         await context.Products.AddRangeAsync(products);
         await context.SaveChangesAsync();

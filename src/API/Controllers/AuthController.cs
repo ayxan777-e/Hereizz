@@ -3,9 +3,10 @@ using Application.Commands.Auth.ConfirmEmail;
 using Application.Commands.Auth.Login;
 using Application.Commands.Auth.Logout;
 using Application.Commands.Auth.RefreshToken;
-using Application.Commands.Auth.ResendConfirmationEmail;
-using Application.Queries.Auth.GetProfile;
 using Application.Commands.Auth.Register;
+using Application.Commands.Auth.ResendConfirmationEmail;
+using Application.Queries.Auth.GetEmailConfirmationStatus;
+using Application.Queries.Auth.GetProfile;
 using Application.Shared.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -66,6 +67,15 @@ public class AuthController : BaseApiController
     public async Task<IActionResult> Profile()
     {
         var result = await _mediator.Send(new GetProfileQuery());
+        return HandleResponse(result);
+    }
+
+    [HttpGet("email-confirmation-status")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetEmailConfirmationStatus(
+    [FromQuery] GetEmailConfirmationStatusQuery query)
+    {
+        var result = await _mediator.Send(query);
         return HandleResponse(result);
     }
 
